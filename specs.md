@@ -1,8 +1,8 @@
-# Seventh-C
+# Seveci
 
 ## Blocs
 
-*syntaxe*: `(code)`
+*syntaxe*: `(code)` ou `(code; code2; codeN)`
 
 *note*: `code` représente une expression simple. Pour écrire une suite d'expressions équivalente à ce code Python :
 
@@ -11,11 +11,14 @@ a = 10
 b = "hello"
 ```
 
-On fera ainsi en Seventh-C :
+On fera ainsi en Seveci :
 
-`(a = 10) (b = "hello")`
+`a = 10
+b = "hello"`
 
 *note 2*: on utilise l'écriture en blocs uniquement dans la rédaction du corps d'une fonction / boucle / condition
+
+*note 3*: dans les blocs à base de `()` ayant plus qu'une instruction, chaque instruction se termine par un `;` sauf la dernière
 
 ## Déclaration de variables
 
@@ -37,7 +40,12 @@ r'[A-Za-z_$][A-Za-z0-9_\?-]*'
 
 ```
 var = 10  # scope global
-X = function (void) (var = 12) (Xprime = function(void) (var)) (Xprime << 0) (var)
+X = function (void) (
+    var = 12;
+    Xprime = function(void) (var);
+    Xprime << 0;
+    var
+)
 var
 ```
 
@@ -51,7 +59,9 @@ L'exécution du script ici renverra succesivement :
 
 ## Déclaration de fonctions
 
-*syntaxe*: `nom-de-fonction = function (arg1 arg2) reste-du-code`
+*syntaxe*: `nom-de-fonction = function (arg1 arg2) (
+    reste-du-code
+)`
 
 *note*: il est conseillé de toujours mettre au moins un argument, même si il ne sera pas utilisé auquel cas on le nommera par convention `nul` ou `void`
 
@@ -59,9 +69,18 @@ L'exécution du script ici renverra succesivement :
 
 *note 3*: la valeur résultant d'une expression dans le dernier bloc sera la valeur de retour. I.E. : `a-func = function (void) (2 * 3)` retournera 6 après avoir appelé `a-func`
 
-*note 4*: il est possible de modifier la valeur d'un argument dans le scope même de la fonction. I.E. : `a-func = function (mon-argument) (mon-argument = 4) (mon-argument)` retournera 4 quelque soit la valeur passée en argument
+*note 4*: il est possible de modifier la valeur d'un argument dans le scope même de la fonction. I.E. :
 
-*note 5*: il n'y a pas de *type checking* possible dans les fonctions
+`a-func = function (mon-argument) (
+    mon-argument = 4;
+    mon-argument
+)`
+
+retournera 4 quelque soit la valeur passée en argument
+
+*note 5*: il n'y a pas de *type checking* possible pour les fonctions ou leurs arguments
+
+*note 6*: une fonction en général doit toujours renvoyer une valeur. Si une fonction vide est dans le code (ce qui peut parfois se passer en phase de développement), elle doit quand même renvoyer quelque chose, par convention 0
 
 ### Appel de fonctions
 
@@ -73,41 +92,85 @@ L'exécution du script ici renverra succesivement :
 
 *syntaxe*: `while condition statements`
 
-*note*: `condition` peut être `1` (pour faire une boucle infinie par exemple) ou une expression plus complexe, qui sera sous forme d'un simple bloc comme suit : `(valeur operateur valeur2)`. `operateur` peut être un opérateur booléan ou arithmétique. I.E. : `while ((10 * (15 + 212)) >= 15) code`
+*note*: `condition` peut être `1` (pour faire une boucle infinie par exemple) ou une expression plus complexe, qui sera sous forme d'un simple bloc comme suit : `(valeur operateur valeur2)`. `operateur` peut être un opérateur booléan ou arithmétique. I.E. :
 
-*note 2*: `statements` est un ou plusieurs blocs. S'il y a plusieurs blocs, ils seront exécutés dans l'ordre où ils apparaissent
+`while ((10 * (15 + 212)) >= 15) (
+    code
+)`
+
+*note 2*: `statements` est un seul bloc
 
 ## Condition
 
-*syntaxe*: `if condition then otherwise`
+*syntaxe*: `if condition then`
 
-*note*: `condition`, `then` et `otherwise` peuvent être des blocs (un seul bloc) ou de simples expressions
+*note*: `condition`, et `then` peuvent être des blocs (un seul bloc) ou de simples expressions
 
-*note 2*: uniquement **si** `condition` est vrai on que évaluera `then`, dans le cas contraire on évaluera que `otherwise`
+*note 2*: uniquement **si** `condition` est vrai on que évaluera `then`
+
+*note 3*: pour faire un `else`, on écrira juste un `if` avec la condition inverse :)
+
+*note 4*: `and` se traduit par `&` (qui est aussi un opérateur binaire), `or` par `|` (même remarque) et si on veut faire un `xor` on utilisera `^` (même remarque)
 
 ## Types
 
 ### Nombre
 
+*syntaxe*: `1`, `42.0`, `1+12i`
+
 ### Chaine de caractères
+
+*syntaxe*: `"ma chaine de caractères"`
+
+*note*: pour écrire un `\n` on tapera `$10` (hors de la chaine)
+
+*note 2*: pour écrire un `\t` on tapera `$9` (hors de la chaine)
+
+*note 3*: pour écrire un `\r` on tapera `$13` (hors de la chaine)
 
 ### Tableau de valeurs
 
-## Continuation de ligne(s)
+*syntaxe*: `[valeur1 valeur2 valeurN]`
 
-Devoir écrire une instruction comme une boucle de traitement dans un plus ou moins sur une seule ligne est extrêmement lourd :
+*note*: un tableau peut contenir n'importe quel type de valeur et même d'autres tableaux
 
-`while (x != nb) (if (x < nb) (print << "C'est plus !") (print << "C'est moins")) (x = user << 0)`
+### Type personnalisé : struct
 
-C'est pourquoi, pour indiquer au parseur que la ligne n'est pas terminée, on peut placer '\' en fin de ligne pour alléger la syntaxe :
+Créer une struct revient à créer ce que l'on appelle `class` dans d'autres langages.
 
-`while (x != nb) \
-    (if (x < nb) \
-        (print << "C'est plus !") \
-        (print << "C'est moins")) \
-    (x = user << 0)`
+*syntaxe*: `objet = struct (
+    _create = function (argument) (
+        code
+    );
 
-Ces deux codes sont strictement équivalent.
+    a-func = function(argument) (
+        code
+    )
+)`
+
+*note*: le point d'entrée `_create` est obligatoire car c'est lui qui permet d'initialiser une instance de `objet`
+
+*note 2*: une `struct` a son propre environnement pointant vers celui du scope la contenant
+
+*note 3*: chaque fonction dans une `struct` a aussi son propre environnement pointant vers l'environnement global de la `struct`
+
+*note 4*: par convention, on laisse une ligne entre chaque déclaration de fonction. Les déclarations de variables doivent se faire au tout début de la `struct` pour éviter des erreurs. Les variables de `struct` sont préfixées de `_` par convention, et les variables de fonction de `struct` par `__` pour bien les différencier des variables de `struct`. Les noms de fonction de `struct` commencent par `$` par convention, pour les différencier des fonctions du scope supérieur.
+
+*note 5*: toutes les variables déclarées dans une `struct` sont **et** resteront toujours privées, sans possibilité de changer ce comportement
+
+#### Instancier une struct
+
+*syntaxe*: `instance = objet << args`
+
+*note*: cette syntaxe appelera le point d'entrée `_create` de `objet` en lui donnant en argument `args`
+
+#### Utiliser une struct
+
+Après avoir instancié un objet que l'on a créé, on souhaite en utiliser ses méthodes.
+
+*syntaxe*: `instance::a-func << args`
+
+*note*: il faut que `instance` existe et soit une instance d'une `struct`, pas directement un objet !
 
 ## Importer un code Python
 

@@ -1,13 +1,21 @@
 include << "random"
 
-prendre-nombre = function (nul) (random::randrange << 50)
+prendre-nombre = function (nul) (
+    random::randrange << 50
+)
 nb = prendre-nombre << 0
 print << "Le nombre maximum est 50. Le minimum est 0"
-user = function (nul) (int << (input << "Entrez un nombre: "))
+user = function (nul) (
+    int << (input << "Entrez un nombre: ")
+)
 x = user << 0
-while (x != nb) \
-    (if (x < nb) \
-        (print << "C'est plus !") \
-        (print << "C'est moins")) \
-    (x = user << 0)
+while (x != nb) (
+    if (x < nb) (
+        print << "C'est plus !"
+    );
+    if (x > nb) (
+        print << "C'est moins !"
+    );
+    x = user << 0
+)
 print << "C'est gagné !"

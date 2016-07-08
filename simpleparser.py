@@ -10,8 +10,30 @@ class Procedure(object):
         env = Env(self.params, args, outer=self.env)
         if self.body[:-1]:
             for line in self.body[:-1]:
-                evaluate(line, env)
-        return evaluate(self.body[-1], env)
+                evaluate([line] if not isinstance(line, list) else line, env)
+        ret = evaluate([self.body[-1]] if not isinstance(self.body[-1], list) else self.body[-1], env)
+        for k, v in self.env.items():
+            if k in env.keys():
+                self.env[k] = env[k]
+        return ret
+
+
+class Struct(object):
+    def __init__(self, outer):
+        self.outer = outer
+        self.env = Env(outer=self.outer)
+
+    def __call__(self, *args):
+        try:
+            ret = self.env["_create"](*args)
+            envi = Env()
+            envi.update({k: v for k, v in self.env.items()})
+
+            self.env = Env(outer=self.outer)
+            self.env.update(envi)
+            return envi
+        except TypeError as ter:
+            raise StructConstructionError("Missing entry point '_create'") from ter
 
 
 def evaluate(parsed_line, env):
@@ -20,24 +42,33 @@ def evaluate(parsed_line, env):
         if isinstance(line, list):
             f, _op, s = line
             return env.find(_op.value)(eval_math(f), eval_math(s))
-        return line.value if not isinstance(line.value, str) else env.find(line.value)
+        return line.value if line.typ != 'ID' else env.find(line.value)
 
     def eval_callfrom(line):
-        w = []
-        while True:
-            if len(line) >= 3:
-                f, _op, *s = line
-            else:
-                break
-            w.append(f.value)
-            if _op.typ != "CALL" and f.typ != "CALL":
-                line = s
-            else:
-                line.pop(0)
-                break
-        line = [line] if not isinstance(line, list) else line
-        w.append(line.pop(0).value)
-        return '.'.join(w), line
+        w = split_toks_kind(line, 'CALL_FROM')
+
+        if not tok_kind_in(w, 'CALL'):
+            return [e.value for e in w], []
+        iof = indexof_tok_kind(w, 'CALL')
+        if iof != -1:
+            return [e.value for e in w[:iof]], w[1 + iof:]
+
+    def consume_modules(main, modules):
+        nonlocal env
+        _module = env.find(main)
+        try:
+            require(type(_module).__name__ == 'module', ValueError("Module unreachable"))
+            m = modules.pop(0)
+            ens = dict(vars(_module))[m]
+            while type(ens).__name__ == 'module':
+                require(len(modules), RuntimeError("Can't call a module ('%s')" % m))
+                m = modules.pop(0)
+                ens = dict(vars(ens))[m]
+            return ens
+        except ValueError as ver:
+            require(isinstance(_module, dict), ValueError("Undefined. Can not call that thing, sorry."))
+            m = modules.pop(0)
+            return _module.find(m)
 
     if len(parsed_line) > 1 and isinstance(parsed_line[1], Token) and parsed_line[1].typ in ('OP', 'BINARYOP', 'COND'):
         require(len(parsed_line) >= 3,
@@ -47,16 +78,14 @@ def evaluate(parsed_line, env):
         if len(parsed_line) > 1:
             if parsed_line[1].typ == 'CALL_FROM':
                 callfrom, args = eval_callfrom(parsed_line)
-                module, end = callfrom.split('.', 1)
+                module, end = callfrom[0], callfrom[1:]
                 if args:
-                    t = args.pop(0)
-                    require(t.typ == 'CALL',
-                            SyntaxError("Arguments found. Require '<<' operator, got '%s'" % t.value))
                     args = [evaluate([a] if not isinstance(a, list) else a, env) for a in args]
-                return dict(vars(env.find(module)))[end](*args)
+                return consume_modules(module, end)(*args)
             if parsed_line[1].typ == 'ASSIGN':
                 if "alias" in env.keys():
-                    require(parsed_line[0].value not in env["alias"].keys(), RuntimeError("Is already an alias, overwritting it would cause problems"))
+                    require(parsed_line[0].value not in env["alias"].keys(),
+                            RuntimeError("'%s' is already an alias, overwritting it would cause problems" % parsed_line[0].value))
                 env[parsed_line[0].value] = evaluate(parsed_line[2:], env)
                 return None
             if parsed_line[1].typ == 'CALL':
@@ -64,6 +93,13 @@ def evaluate(parsed_line, env):
                     RuntimeError("'%s' does not exist, line: %i" % (parsed_line[0].value, parsed_line[0].line)))
                 val = parsed_line[0].value if env.find(parsed_line[0].value) is not None else env["alias"][parsed_line[0].value]
                 return env.find(val)(*[evaluate([bloc] if not isinstance(bloc, list) else bloc, env) for bloc in parsed_line[2:]])
+            if parsed_line[1].typ == 'POSTFIX_OP':
+                require(isinstance(env.find(parsed_line[0].value), (int, float)), TypeError("Require a number for a postfix operator"))
+                value = +1
+                if parsed_line[1].value == '--':
+                    value = -1
+                env[parsed_line[0].value] += value
+                return env[parsed_line[0].value]
         return env.find(parsed_line[0].value)
     if parsed_line[0].typ == 'kwtype':
         if parsed_line[0].value == 'function':
@@ -71,19 +107,22 @@ def evaluate(parsed_line, env):
                 require(supposed_arg.typ == 'ID',
                     SyntaxError("'%s' should be an ID, not '%s'. Line: %i" % (supposed_arg.value, supposed_arg.typ, supposed_arg.line)))
             return Procedure(parsed_line[1], parsed_line[2:], env)
+        if parsed_line[0].value == 'struct':
+            obj = Struct(env)
+            for bloc in parsed_line[1:]:
+                evaluate([bloc] if not isinstance(bloc, list) else bloc, obj.env)
+            return obj
         if parsed_line[0].value == 'if':
-            require(3 <= len(parsed_line) <= 4,
-                SyntaxError("Missing a part of the expression. Line: %i" % parsed_line[0].line))
+            require(len(parsed_line) >= 3,
+                SyntaxError("Missing a part of the expression for 'if'. Line: %i" % parsed_line[0].line))
             cond = evaluate([parsed_line[1]] if not isinstance(parsed_line[1], list) else parsed_line[1], env)
             if cond:
-                return evaluate([parsed_line[2]] if not isinstance(parsed_line[2], list) else parsed_line[2], env)
-            else:
-                if len(parsed_line) == 4:
-                    return evaluate([parsed_line[3]] if not isinstance(parsed_line[3], list) else parsed_line[3], env)
+                for elem in parsed_line[2:]:
+                    evaluate([elem] if not isinstance(elem, list) else elem, env)
             return None
         if parsed_line[0].value == 'while':
             require(len(parsed_line) >= 3,
-                SyntaxError("Missing a part of the expression. Line: %i" % parsed_line[0].line))
+                SyntaxError("Missing a part of the expression for 'while'. Line: %i" % parsed_line[0].line))
             while evaluate([parsed_line[1]] if not isinstance(parsed_line[1], list) else parsed_line[1], env):
                 for expr in parsed_line[2:]:
                     evaluate([expr] if not isinstance(expr, list) else expr, env)
@@ -116,7 +155,7 @@ def check_parsing(required_tok_type, repr_of_type):
                 print("***")
                 print_r(check_parsing.order)
                 print("***")
-                raise ParseError("Can't continue to parse.\nLine: %i, %s" % (_tokens[-1].line, context[_tokens[-1].line - 1]))
+                raise ParseError("Can't continue to parse.\nLine: %i, %s" % (_tokens[-1].line, assemble(_tokens)))
         return checker
     return decorator
 
@@ -126,10 +165,10 @@ def parse_array(context, tokens):
     array = []
 
     while tokens[0].typ != 'ARRAY_END':
-        val = parse_tokens(context, tokens)
+        val = parse(context, tokens)
         if val is not None:
             array.append(val)
-    tok_array = Token('ARRAY', [t.value for t in array], token.line, token.column)
+    tok_array = Token('ARRAY', [t.value for t in array], array[0].line, array[0].column)
 
     return tok_array
 
@@ -139,7 +178,7 @@ def parse_bloc(context, tokens):
     ast = []
 
     while tokens[0].typ != 'BLOC_END':
-        val = parse_tokens(context, tokens)
+        val = parse(context, tokens)
         if val is not None:
             ast.append(val)
 

@@ -1,0 +1,26 @@
+objet = struct (
+    var = 0;
+    base = 0;
+
+    _create = function (test) (
+        print << "dans le _create de objet." $10 "test vaut : " test;
+        print << "var doit valloir 0. => " var;
+        var = 15;
+        base = 15;
+        print << "et maintenant var vaut 15 => " var
+    );
+
+    method = function (truc) (
+        print << "dans method";
+        print << "var : " var;
+        base = var;
+        var = var + truc;
+        print << "var doit maintenant valloir " base " + " truc " soit " (base + truc) " => " var
+    )
+)
+
+instance = objet << 12
+instance::method << 5
+instance::method << 6
+print << "."
+autre = objet << 14

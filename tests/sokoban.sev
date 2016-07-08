@@ -1,0 +1,66 @@
+# sokoban
+
+World = struct (
+    # 0 => empty, 1 => wall, 2 => box, 3 => goal, 4 => player
+    _map = [
+        [1 1 1 1 1 1 1 1 1 1]
+        [1 0 0 0 0 0 0 0 0 1]
+        [1 0 4 0 1 1 1 0 0 1]
+        [1 0 1 1 1 0 0 0 0 1]
+        [1 0 0 0 1 0 0 0 0 1]
+        [1 1 1 2 1 1 1 1 0 1]
+        [1 0 1 0 1 0 0 0 0 1]
+        [1 0 1 0 0 3 0 0 0 1]
+        [1 0 0 0 1 0 0 0 0 1]
+        [1 1 1 1 1 1 1 1 1 1]
+    ];
+    _width = 10;
+    _height = 10;
+    _can_play = false;
+
+    _create = function (void) (
+        $check_map << 0  # pour être sûr qu'il n'y est qu'un seul joueur
+                         # et autant de goals que de box
+    );
+
+    $check_map = function (void) (
+        __player_count = 0;
+        __goals_count = 0;
+        __box_count = 0;
+        __i = 0;
+
+        while (__i < (_width * _height)) (
+            __x = __i % _width;
+            __y = int << (__i / _width);
+            __obj = $get_at << __x __y;
+            __i ++
+        );
+
+        if (__obj == 2) (__box_count ++);
+        if (__obj == 3) (__goals_count ++);
+        if (__obj == 4) (__player_count ++)
+
+        if ((__player_count == 1) & (__box_count == __goals_count)) (_can_play = true)
+    );
+
+    $get_at = function (x y) (
+        (_map @ y) @ x
+    )
+)
+
+world = World << 0
+
+Player = struct (
+    _life = 100;
+    _max_life = 100;
+
+    _create = function (void) (
+        0
+    );
+
+    $move = function (dx dy) (
+        0
+    )
+)
+
+player = Player << 0

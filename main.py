@@ -1,4 +1,4 @@
-import argparser
+import argparse
 import tokenizer
 import simpleparser
 from utils import *
@@ -6,17 +6,17 @@ import os
 
 
 arg_parser = argparse.ArgumentParser(
-	prog='seveci',
-	description="Tokenize, parse, and execute the given input file"
+    prog='seveci',
+    description="Tokenize, parse, and execute the given input file"
 )
 arg_parser.add_argument('--version', action='version',
                         version='%(prog)s 2.0')
 arg_parser.add_argument('-p', '--path', dest='path', action='store',
                         help='the input file')
 arg_parser.add_argument('-l', '--lex', dest='lex', action='store_true',
-                   		help='tokenize the given input file')
+                   	    help='tokenize the given input file')
 arg_parser.add_argument('-a', '--ast', dest='ast', action='store_true',
-                   		help='parse the given input file')
+                   	    help='parse the given input file')
 arg_parser.add_argument('-e', '--execute', dest='exe', action='store_true',
                         help='execute the given input file')
 arg_parser.add_argument('-i', '--interpreter', dest='repl', action='store_true',
@@ -24,16 +24,12 @@ arg_parser.add_argument('-i', '--interpreter', dest='repl', action='store_true',
 
 
 def main(path="", lex=False, ast=False, exe=False, repl=False):
-    path = os.path.abspath(path)
-
-    try:
+    if path:
+        path = os.path.abspath(path)
         with open(path, "r", encoding="utf-8") as file:
-            content = file.readlines()
-    except Exception as exc:
-        if not repl:
-            raise RuntimeError("Unable to find '%s'" % path) from exc
+            content = file.read()
 
-    if ast or comp:
+    if ast:
         lex = True
     if exe:
         lex = True
@@ -44,7 +40,7 @@ def main(path="", lex=False, ast=False, exe=False, repl=False):
 
     if lex:
         tokens = [tok for tok in tokenizer.tokenize(content) if is_ok(tok)]
-        if not ast and not comp: print_r(tokens)
+        if not ast: print_r(tokens)
     if ast:
         parsed = [p for p in [simpleparser.parse(content, toks) for toks in tokens] if is_ok(p)]
         if not exe: print_r(parsed)
@@ -57,8 +53,9 @@ def main(path="", lex=False, ast=False, exe=False, repl=False):
             if cmd != "!go":
                 code.append(cmd)
             else:
-                tokens = [t for t in tokenizer.tokenize(code) if is_ok(t)]
-                parsed = [p for p in [simpleparser.parse(code, toks) for toks in tokens] if is_ok(p)]
+                print("Executing code\n%s\n" % "\n".join(code))
+                tokens = [t for t in tokenizer.tokenize("\n".join(code)) if is_ok(t)]
+                parsed = [p for p in [simpleparser.parse("\n".join(code), toks) for toks in tokens] if is_ok(p)]
                 for li in parsed:
                     try:
                         val = simpleparser.evaluate(li, env)

@@ -1,0 +1,3 @@
+include << "machin"
+
+machin::truc::test << 0

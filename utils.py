@@ -4,13 +4,21 @@ import time
 import operator as op
 
 
-Token = collections.namedtuple('Token', ['typ', 'value', 'line', 'column'])
+Token = namedtuple('Token', ['typ', 'value', 'line', 'column'])
 keywords = (
-    "function", "if", "while", "alias"
+    "function", "struct", "if", "while", "alias"
 )
 
 
 class ParseError(Exception):
+    pass
+
+
+class TokenizingError(Exception):
+    pass
+
+
+class StructConstructionError(Exception):
     pass
 
 
@@ -67,7 +75,7 @@ def standard_env():
         '!': lambda a: not a,
 
         # listes
-        '@': op.getitem, '@=': op.setitem, '@~': op.delitem, 'length': len,
+        '@': op.getitem, '@=': lambda lst, new: op.setitem(lst, new[0], new[1]), '@~': op.delitem, 'length': len,
         'list': lambda *x: list(x), 'list?': lambda x: isinstance(x, list),
         '@@': lambda *x: x[1:], 'count': lambda x, y: x.count(y),
         'cons': lambda x, y: [x] + y if not isinstance(x, list) and isinstance(y, list) else x + [y],
@@ -91,6 +99,7 @@ def standard_env():
         'bool': lambda x: bool(x), 'bool?': lambda x: isinstance(x, bool),
         'str': lambda x: str(x), 'str?': lambda x: isinstance(x, str),
         'list?': lambda x: isinstance(x, list),
+        'type': lambda x: type(x).__name__,
 
         # constantes
         '$10': "\n", "$13": "\r", "$9": "\t",
@@ -112,6 +121,44 @@ def load(path):
             eval_code(parsed, _env)
     del code
     return _env
+
+
+def split_toks_kind(line, kind):
+    w = []
+
+    for tok in line:
+        if tok.typ != kind:
+            w.append(tok)
+
+    return w
+
+
+def tok_kind_in(line, kind):
+    for tok in line:
+        if tok.typ == kind:
+            return True
+    return False
+
+
+def indexof_tok_kind(line, kind):
+    for i, tok in enumerate(line):
+        if tok.typ == kind:
+            return i
+    return -1
+
+
+def count_toks_kind(line, kind):
+    tot = 0
+
+    for tok in line:
+        if tok.typ == kind:
+            tot += 1
+
+    return tot
+
+
+def assemble(toks):
+    return " ".join(i.value for i in toks)
 
 
 def atom(tok):
@@ -155,6 +202,15 @@ def print_r(array, i=0):
         else:
             print("\t" * i, "-" * 4, i)
             print_r(elem, i + 1)
+
+
+def print_d(dct, i=0):
+    for k, v in dct.items():
+        if not isinstance(v, dict):
+            print("\t" * i + "'%s' : %s," % (k, v))
+        else:
+            print("\t" * i, "'%s' :" % k)
+            print_d(v, i + 1)
 
 
 def is_ok(obj):
