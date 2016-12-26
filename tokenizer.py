@@ -12,11 +12,12 @@ class TokenSpecification(Enum):
 
     POSTFIX_OP = r'(\+\+|--)'
 
-    OP = r'(\+|-|\*|/|%|\*\*|@@|@|@=|@~)'
-    BINARYOP = r'(\&|\^|\|rshift|lshift)'
-    COND = r'(<|>|==|<=|>=|!=|!)'
+    NUMBER = r'-?\d+(\.\d*)?'
 
-    NUMBER = r'\d+(\.\d*)?'
+    OP = r'(\+|-|\*|/|%|\*\*|@@|@|@~)'
+    BINARYOP = r'(\&|\^|\||rshift|lshift)'
+    COND = r'(<|>|==|<=|>=|!=)'
+
     STRING = r'"[^"]*?"'
     BOOL = r'(true|false)'
 
@@ -29,7 +30,6 @@ class TokenSpecification(Enum):
     ID = r'[A-Za-z_$][A-Za-z0-9_\?-]*'
 
     END = r';'
-    CONTINUATION = r'\\'
     NEWLINE = r'(\n|\r|\r\n)'
     SKIP = r'[ \t]+'
     MISMATCH = r'.'  # priorité la plus basse au parsing

@@ -2,7 +2,7 @@ objet = struct (
     var = 0;
     base = 0;
 
-    _create = function (test) (
+    create = function (test) (
         print << "dans le _create de objet." $10 "test vaut : " test;
         print << "var doit valloir 0. => " var;
         var = 15;

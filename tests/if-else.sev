@@ -1,0 +1,7 @@
+if ([1 2 3 4]) (
+    print << "ok";
+    print << "ok 2"
+) else (
+    print << "pas ok";
+    print << "pas ok 2"
+)

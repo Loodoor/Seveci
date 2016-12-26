@@ -100,17 +100,39 @@ retournera 4 quelque soit la valeur passée en argument
 
 *note 2*: `statements` est un seul bloc
 
+## Boucle for
+
+Il n'y a en réalité pas de boucle `for`. Pour en simuler une (parcourant les éléments d'un tableau par exemple), on fera ainsi :
+
+`i = -1
+while (i++ < (length << list)) (
+    elem = list @ i
+)`
+
 ## Condition
 
-*syntaxe*: `if condition then`
+*syntaxe*: `if condition then [else other-then]`
 
 *note*: `condition`, et `then` peuvent être des blocs (un seul bloc) ou de simples expressions
 
-*note 2*: uniquement **si** `condition` est vrai on que évaluera `then`
+*note 2*: uniquement **si** `condition` est vraie on que évaluera `then`
 
-*note 3*: pour faire un `else`, on écrira juste un `if` avec la condition inverse :)
+*note 3*: le `else` est optionnel. **si** `condition` est fausse et que `else` est spécifié, alors `other-then` sera évalué
 
 *note 4*: `and` se traduit par `&` (qui est aussi un opérateur binaire), `or` par `|` (même remarque) et si on veut faire un `xor` on utilisera `^` (même remarque)
+
+*note 5*: un `if-else` retourne la valeur de la dernière expression évaluée. Par exemple, ici `a` prendra la valeur 5 :
+
+`a = if (true) (
+    5
+) else (
+    2
+)
+`
+
+Qui au passage est strictement équivalent à :
+
+`a = if true 5 else 2`
 
 ## Types
 
@@ -139,7 +161,7 @@ retournera 4 quelque soit la valeur passée en argument
 Créer une struct revient à créer ce que l'on appelle `class` dans d'autres langages.
 
 *syntaxe*: `objet = struct (
-    _create = function (argument) (
+    create = function (argument) (
         code
     );
 
@@ -148,7 +170,7 @@ Créer une struct revient à créer ce que l'on appelle `class` dans d'autres la
     )
 )`
 
-*note*: le point d'entrée `_create` est obligatoire car c'est lui qui permet d'initialiser une instance de `objet`
+*note*: le point d'entrée `create` est obligatoire car c'est lui qui permet d'initialiser une instance de `objet`
 
 *note 2*: une `struct` a son propre environnement pointant vers celui du scope la contenant
 

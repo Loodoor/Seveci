@@ -1,0 +1,9 @@
+a = function (void) (
+    top_var = top_var + 1
+)
+
+top_var = 1
+print << top_var
+
+a << 0
+print << top_var
