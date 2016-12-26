@@ -44,14 +44,16 @@ r'[A-Za-z_$][A-Za-z0-9_\?-]*'
 var = 10  # scope global
 X = function (void) (
     var = 12;
+    print << var;
     Xprime = function(void) (var);
-    Xprime << 0;
+    print << (Xprime << 0);
     var
 )
-var
+X << 0
+print << var
 ```
 
-L'exécution du script ici renverra succesivement :
+L'exécution du script ci-dessus affichera succesivement :
 
 * le `var` du scope **X** (12)
 
