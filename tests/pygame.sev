@@ -1,0 +1,23 @@
+include << "pygame"
+
+QUIT = pygame::QUIT
+
+_ = pygame::init <<
+p = true
+
+a = pygame::display::set_mode << [600 600]
+type << a
+b = pygame::image::load << "tests/img.png"
+type << b
+_ = b::convert_alpha <<
+
+while p (
+    a::blit << b [10 10];
+
+    e = pygame::event::poll <<;
+    t = e::type;
+    if (t == QUIT) (p = false);
+
+    pygame::display::flip <<
+)
+pygame::quit <<

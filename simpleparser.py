@@ -66,9 +66,15 @@ def evaluate(parsed_line, env):
                 ens = dict(vars(ens))[m]
             return ens
         except ValueError as ver:
-            require(isinstance(_module, dict), ValueError("Undefined. Can not call that thing, sorry."))
-            m = modules.pop(0)
-            return _module.find(m)
+            try:
+                require(isinstance(_module, dict), ValueError("Undefined. Can not call that thing, sorry."))
+                m = modules.pop(0)
+                return _module.find(m)
+            except ValueError as ver2:
+                if str(type(_module))[1:6] == 'class':
+                    if len(modules) == 1:
+                        return getattr(_module, modules[0])
+                    raise ValueError("Too much sub modules")
 
     if len(parsed_line) > 1 and isinstance(parsed_line[1], Token) and parsed_line[1].typ in ('OP', 'BINARYOP', 'COND'):
         require(len(parsed_line) >= 3,
@@ -81,7 +87,8 @@ def evaluate(parsed_line, env):
                 module, end = callfrom[0], callfrom[1:]
                 if args:
                     args = [evaluate([a] if not isinstance(a, list) else a, env) for a in args]
-                return consume_modules(module, end)(*args)
+                m = consume_modules(module, end)
+                return m(*args) if (isinstance(m, type(lambda:None)) or isinstance(m, type(abs))) else m
             if parsed_line[1].typ == 'ASSIGN':
                 if "alias" in env.keys():
                     require(parsed_line[0].value not in env["alias"].keys(),

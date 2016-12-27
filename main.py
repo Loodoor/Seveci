@@ -1,8 +1,9 @@
+import os
 import argparse
 import tokenizer
+import transpiler
 import simpleparser
 from utils import *
-import os
 
 
 arg_parser = argparse.ArgumentParser(
@@ -21,9 +22,11 @@ arg_parser.add_argument('-e', '--execute', dest='exe', action='store_true',
                         help='execute the given input file')
 arg_parser.add_argument('-i', '--interpreter', dest='repl', action='store_true',
                         help='start an interpreter')
+arg_parser.add_argument('-t', '--transpile', dest='transpile', action='store_true',
+                        help='transpile the given seveci code to python')
 
 
-def main(path="", lex=False, ast=False, exe=False, repl=False):
+def main(path="", lex=False, ast=False, exe=False, repl=False, transpile=False):
     if path:
         path = os.path.abspath(path)
         with open(path, "r", encoding="utf-8") as file:
@@ -31,7 +34,7 @@ def main(path="", lex=False, ast=False, exe=False, repl=False):
 
     if ast:
         lex = True
-    if exe:
+    if exe or transpile:
         lex = True
         ast = True
 
@@ -43,7 +46,7 @@ def main(path="", lex=False, ast=False, exe=False, repl=False):
         if not ast: print_r(tokens)
     if ast:
         parsed = [p for p in [simpleparser.parse(content, toks) for toks in tokens] if is_ok(p)]
-        if not exe: print_r(parsed)
+        if not exe and not transpile: print_r(parsed)
     if repl:
         print("Starting a REPL instance. Type !go to execute your code")
         env = standard_env()
@@ -70,6 +73,12 @@ def main(path="", lex=False, ast=False, exe=False, repl=False):
             val = simpleparser.evaluate(line, env)
             if val:
                 print(mtoa(val))
+    if transpile:
+        out = []
+        transpiler.transpile(parsed, out)
+        with open(path.split('.')[0] + '.py', 'w') as file:
+            for line in out:
+                file.write(line + "\n")
 
 
 if __name__ == '__main__':

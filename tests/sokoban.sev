@@ -163,8 +163,7 @@ canplay = world::$canPlay? << 0
 
 if canplay (
     playing = true
-)
-if (not canplay) (
+) else (
     playing = false;
     print << "Can not play, there are errors on the board"
 )

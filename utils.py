@@ -115,7 +115,7 @@ def load(path):
 
     _env = standard_env()
     for line in code:
-        if line.count(start_token) == line.count(end_token) and line.strip()[:2] != comment:
+        if line.count('(') == line.count(')') and line.strip()[:2] != comment:
             parsed = parse(line)
             eval_code(parsed, _env)
     del code
