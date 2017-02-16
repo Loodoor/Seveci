@@ -5,3 +5,9 @@ if ([1 2 3 4]) (
     print << "pas ok";
     print << "pas ok 2"
 )
+
+if false (
+    print << "true"
+) else true (
+    print << "trou 2"
+)
