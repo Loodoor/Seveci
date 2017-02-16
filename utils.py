@@ -72,10 +72,9 @@ def standard_env():
         # Conditions
         '>': op.gt, '<': op.lt, '>=': op.ge,
         '<=': op.le, '!=': op.ne, '==': op.eq,
-        '!': lambda a: not a,
 
         # listes
-        '@': op.getitem, '@=': lambda lst, new: op.setitem(lst, new[0], new[1]), '@~': op.delitem, 'length': len,
+        '@': op.getitem, 'setitem': lambda lst, i, new: op.setitem(lst, i, new), '@~': op.delitem, 'length': len,
         'list': lambda *x: list(x), 'list?': lambda x: isinstance(x, list),
         '@@': lambda *x: x[1:], 'count': lambda x, y: x.count(y),
         'cons': lambda x, y: [x] + y if not isinstance(x, list) and isinstance(y, list) else x + [y],
@@ -86,7 +85,7 @@ def standard_env():
         # autres
         'time': time.time, 'round': round, 'abs': abs, 'zip': lambda *x: list(zip(*x)),
         'map': lambda *x: list(map(*x)), 'max': max, 'min': min,
-        'print': lambda *x: print(mtoa(*x)), 'input': input,
+        'print': lambda *x: print(mtoa(*x), flush=True), 'printc': lambda x: print(x, end='', flush=True), 'input': input,
         'include': lambda x: _env.update({x: __import__(x)}),
         'load': lambda x: (_env.update(load(x)), None)[1],
 
@@ -127,7 +126,7 @@ def split_toks_kind(line, kind):
     w = []
 
     for tok in line:
-        if tok.typ != kind:
+        if not isinstance(tok, Token) or tok.typ != kind:
             w.append(tok)
 
     return w

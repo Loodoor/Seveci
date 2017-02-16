@@ -13,8 +13,10 @@ b = "hello"
 
 On fera ainsi en Seveci :
 
-`a = 10
-b = "hello"`
+```
+a = 10
+b = "hello"
+```
 
 *note 2*: on utilise l'écriture en blocs uniquement dans la rédaction du corps d'une fonction / boucle / condition
 
@@ -59,9 +61,11 @@ L'exécution du script ici renverra succesivement :
 
 ## Déclaration de fonctions
 
-*syntaxe*: `nom-de-fonction = function (arg1 arg2) (
+*syntaxe*:
+```nom-de-fonction = function (arg1 arg2) (
     reste-du-code
-)`
+)
+```
 
 *note*: il est conseillé de toujours mettre au moins un argument, même si il ne sera pas utilisé auquel cas on le nommera par convention `nul` ou `void`
 
@@ -71,10 +75,12 @@ L'exécution du script ici renverra succesivement :
 
 *note 4*: il est possible de modifier la valeur d'un argument dans le scope même de la fonction. I.E. :
 
-`a-func = function (mon-argument) (
+```
+a-func = function (mon-argument) (
     mon-argument = 4;
     mon-argument
-)`
+)
+```
 
 retournera 4 quelque soit la valeur passée en argument
 
@@ -94,11 +100,24 @@ retournera 4 quelque soit la valeur passée en argument
 
 *note*: `condition` peut être `1` (pour faire une boucle infinie par exemple) ou une expression plus complexe, qui sera sous forme d'un simple bloc comme suit : `(valeur operateur valeur2)`. `operateur` peut être un opérateur booléan ou arithmétique. I.E. :
 
-`while ((10 * (15 + 212)) >= 15) (
+```
+while ((10 * (15 + 212)) >= 15) (
     code
-)`
+)
+```
 
 *note 2*: `statements` est un seul bloc
+
+## Boucle for
+
+Il n'y a en réalité pas de boucle `for`. Pour en simuler une (parcourant les éléments d'un tableau par exemple), on fera ainsi :
+
+```
+i = -1
+while (i++ < (length << list)) (
+    elem = list @ i
+)
+```
 
 ## Condition
 
@@ -138,17 +157,19 @@ retournera 4 quelque soit la valeur passée en argument
 
 Créer une struct revient à créer ce que l'on appelle `class` dans d'autres langages.
 
-*syntaxe*: `objet = struct (
-    _create = function (argument) (
+*syntaxe*:
+```objet = struct (
+    create = function (argument) (
         code
     );
 
     a-func = function(argument) (
         code
     )
-)`
+)
+```
 
-*note*: le point d'entrée `_create` est obligatoire car c'est lui qui permet d'initialiser une instance de `objet`
+*note*: le point d'entrée `create` est obligatoire car c'est lui qui permet d'initialiser une instance de `objet`
 
 *note 2*: une `struct` a son propre environnement pointant vers celui du scope la contenant
 
@@ -162,7 +183,7 @@ Créer une struct revient à créer ce que l'on appelle `class` dans d'autres la
 
 *syntaxe*: `instance = objet << args`
 
-*note*: cette syntaxe appelera le point d'entrée `_create` de `objet` en lui donnant en argument `args`
+*note*: cette syntaxe appelera le point d'entrée `create` de `objet` en lui donnant en argument `args`
 
 #### Utiliser une struct
 

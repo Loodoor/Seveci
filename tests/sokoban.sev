@@ -5,12 +5,12 @@ World = struct (
     _map = [
         [1 1 1 1 1 1 1 1 1 1]
         [1 0 0 0 0 0 0 0 0 1]
-        [1 0 4 0 1 1 1 0 0 1]
+        [1 0 0 0 1 1 1 0 0 1]
         [1 0 1 1 1 0 0 0 0 1]
         [1 0 0 0 1 0 0 0 0 1]
         [1 1 1 2 1 1 1 1 0 1]
         [1 0 1 0 1 0 0 0 0 1]
-        [1 0 1 0 0 3 0 0 0 1]
+        [1 0 0 0 0 3 0 0 0 1]
         [1 0 0 0 1 0 0 0 0 1]
         [1 1 1 1 1 1 1 1 1 1]
     ];
@@ -19,12 +19,16 @@ World = struct (
     _can_play = false;
 
     _create = function (void) (
-        $check_map << 0  # pour être sûr qu'il n'y est qu'un seul joueur
-                         # et autant de goals que de box
+        $check_map << 0  # pour être sûr qu'on ait autant de goals que de box
     );
 
+    $canPlay? = function (void) (_can_play);
+
+    $getWidth = function (void) (_width);
+
+    $getHeight = function (void) (_height);
+
     $check_map = function (void) (
-        __player_count = 0;
         __goals_count = 0;
         __box_count = 0;
         __i = 0;
@@ -33,18 +37,50 @@ World = struct (
             __x = __i % _width;
             __y = int << (__i / _width);
             __obj = $get_at << __x __y;
+
+            if (__obj == 2) (__box_count ++);
+            if (__obj == 3) (__goals_count ++);
+
             __i ++
         );
 
-        if (__obj == 2) (__box_count ++);
-        if (__obj == 3) (__goals_count ++);
-        if (__obj == 4) (__player_count ++)
+        if (__box_count == __goals_count) (_can_play = true)
+    );
 
-        if ((__player_count == 1) & (__box_count == __goals_count)) (_can_play = true)
+    $check_winning = function (void) (
+        __i = 0;
+        __box_count = 0;
+        __goals_count = 0;
+
+        while (__i < (_width * _height)) (
+            __x = __i % _width;
+            __y = int << (__i / _width);
+            __obj = $get_at << __x __y;
+
+            if (__obj == 2) (__box_count ++);
+            if (__obj == 3) (__goals_count ++);
+
+            __i ++
+        );
+
+        win = false;
+
+        if ((__box_count > 0) & (__goals_count == 0)) (win = true);
+
+        win
     );
 
     $get_at = function (x y) (
         (_map @ y) @ x
+    );
+
+    $move_box = function (x y nx ny) (
+        __case = $get_at << x y;
+        __new = $get_at << nx ny;
+        if ((__case == 2) & ((__new == 3) ^ (__new == 0))) (
+            setitem << (_map @ y) x 0;
+            setitem << (_map @ ny) nx 2
+        )
     )
 )
 
@@ -53,14 +89,157 @@ world = World << 0
 Player = struct (
     _life = 100;
     _max_life = 100;
+    _world = 0;
+    _x = 0;
+    _y = 0;
 
-    _create = function (void) (
-        0
+    _create = function (x y world) (
+        _x = x;
+        _y = y;
+        _world = world
     );
 
+    $getX = function (void) (_x);
+
+    $getY = function (void) (_y);
+
     $move = function (dx dy) (
-        0
+        __case = _world::$get_at << (_x + dx) (_y + dy);
+        __moved = true;
+
+        if ((__case == 0) ^ (__case == 3)) (
+            _x = _x + dx;
+            _y = _y + dy
+        );
+        if (__case == 1) (__moved = false);
+        if (__case == 2) (
+            # box
+            __new = _world::$get_at << (_x + (dx * 2)) (_y + (dy * 2));
+            if ((__new == 1) | (__new == 2)) (__moved = false);
+            if ((__new == 0) | (__new == 3)) (
+                _x = _x + dx;
+                _y = _y + dy;
+                _world::$move_box << _x _y (_x + dx) (_y + dy)
+            )
+        );
+        __moved
     )
 )
 
-player = Player << 0
+player = Player << 2 2 world  # HARDCODE xD
+
+format = function (bloc) (
+    w = " ";
+
+    if (bloc == 0) (w = " ");
+    if (bloc == 1) (w = "#");
+    if (bloc == 2) (w = "$");
+    if (bloc == 3) (w = ".");
+
+    w
+)
+
+draw = function (void) (
+    _i = 0;
+    _w = world::$getWidth << 0;
+    _h = world::$getHeight << 0;
+    _xp = player::$getX << 0;
+    _yp = player::$getY << 0;
+
+    while (_i < (_w * _h)) (
+        _x = _i % _w;
+        _y = int << (_i / _w);
+        _obj = format << (world::$get_at << _x _y);
+
+        if ((_i % _w) == 0) (printc << $10);
+        if ((_xp == _x) & (_yp == _y)) (printc << "@");
+        if ((_xp != _x) | (_yp != _y)) (printc << _obj);
+
+        _i ++
+    )
+)
+
+canplay = world::$canPlay? << 0
+
+if canplay (
+    playing = true
+)
+if (canplay != true) (
+    playing = false;
+    print << "Can not play, there are errors on the board"
+)
+
+user_cmd = function (void) (
+    printc << $10;
+    _in = input << "Command> ";
+
+    if (_in == "help") (
+        print << "You can type any of these commands :" $10
+                 "left (go to the left)" $ 10
+                 "right (go to the right)" $10
+                 "up (go forward)" $10
+                 "down (go downward)" $10
+                 "print (print the board)" $10
+                 "end (quit the game)"
+    );
+    if (_in == "left") (
+        _r = player::$move << -1 0;
+        if _r (print << "Moved to left");
+        if (not _r) (print << "Can not move to left")
+    );
+    if (_in == "right") (
+        _r = player::$move << 1 0;
+        if _r (print << "Moved to right");
+        if (not _r) (print << "Can not move to ")
+    );
+    if (_in == "up") (
+        _r = player::$move << 0 -1;
+        if _r (print << "Moved forward");
+        if (not _r) (print << "Can not move to ")
+    );
+    if (_in == "down") (
+        _r = player::$move << 0 1;
+        if _r (print << "Moved downward");
+        if (not _r) (print << "Can not move to ")
+    );
+    if (_in == "print") (
+        draw << 0
+    );
+    if (_in == "end") (
+        playing = false
+    )
+)
+
+turns = 0
+
+while playing (
+    user_cmd << 0;
+    if (world::$check_winning << 0) (
+        print << "You win !";
+        playing = false
+    );
+    turns ++
+)
+
+print << "You played during " tour " turns !"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# end
