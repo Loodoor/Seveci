@@ -6,7 +6,7 @@ import operator as op
 
 Token = namedtuple('Token', ['typ', 'value', 'line', 'column'])
 keywords = (
-    "function", "struct", "if", "while", "alias"
+    "function", "struct", "if", "else", "while", "alias"
 )
 
 
@@ -115,7 +115,7 @@ def load(path):
 
     _env = standard_env()
     for line in code:
-        if line.count(start_token) == line.count(end_token) and line.strip()[:2] != comment:
+        if line.count('(') == line.count(')') and line.strip()[:2] != comment:
             parsed = parse(line)
             eval_code(parsed, _env)
     del code
@@ -161,20 +161,23 @@ def assemble(toks):
 
 
 def atom(tok):
-    if tok.value == 'true':
-        value = True
-    elif tok.value == 'false':
-        value = False
-    try:
-        value = int(tok.value)
-    except ValueError:
+    value = tok.value
+    if tok.typ == 'BOOL':
+        if tok.value == 'true':
+            value = True
+        elif tok.value == 'false':
+            value = False
+    if tok.typ == 'NUMBER':
         try:
-            value = float(tok.value)
+            value = int(tok.value)
         except ValueError:
             try:
-                value = complex(tok.value.replace('i', 'j', 1))
+                value = float(tok.value)
             except ValueError:
-                value = str(tok.value)
+                try:
+                    value = complex(tok.value.replace('i', 'j', 1))
+                except ValueError:
+                    pass
     return Token(tok.typ, value, tok.line, tok.column)
 
 

@@ -25,7 +25,7 @@ class Struct(object):
 
     def __call__(self, *args):
         try:
-            ret = self.env["_create"](*args)
+            ret = self.env["create"](*args)
             envi = Env()
             envi.update({k: v for k, v in self.env.items()})
 
@@ -33,7 +33,7 @@ class Struct(object):
             self.env.update(envi)
             return envi
         except TypeError as ter:
-            raise StructConstructionError("Missing entry point '_create'") from ter
+            raise StructConstructionError("Missing entry point 'create'") from ter
 
 
 def evaluate(parsed_line, env):
@@ -66,9 +66,15 @@ def evaluate(parsed_line, env):
                 ens = dict(vars(ens))[m]
             return ens
         except ValueError as ver:
-            require(isinstance(_module, dict), ValueError("Undefined. Can not call that thing, sorry."))
-            m = modules.pop(0)
-            return _module.find(m)
+            try:
+                require(isinstance(_module, dict), ValueError("Undefined. Can not call that thing, sorry."))
+                m = modules.pop(0)
+                return _module.find(m)
+            except ValueError as ver2:
+                if str(type(_module))[1:6] == 'class':
+                    if len(modules) == 1:
+                        return getattr(_module, modules[0])
+                    raise ValueError("Too much sub modules")
 
     if len(parsed_line) > 1 and isinstance(parsed_line[1], Token) and parsed_line[1].typ in ('OP', 'BINARYOP', 'COND'):
         require(len(parsed_line) >= 3,
@@ -81,7 +87,8 @@ def evaluate(parsed_line, env):
                 module, end = callfrom[0], callfrom[1:]
                 if args:
                     args = [evaluate([a] if not isinstance(a, list) else a, env) for a in args]
-                return consume_modules(module, end)(*args)
+                m = consume_modules(module, end)
+                return m(*args) if (isinstance(m, type(lambda:None)) or isinstance(m, type(abs))) else m
             if parsed_line[1].typ == 'ASSIGN':
                 if "alias" in env.keys():
                     require(parsed_line[0].value not in env["alias"].keys(),
@@ -116,10 +123,20 @@ def evaluate(parsed_line, env):
             require(len(parsed_line) >= 3,
                 SyntaxError("Missing a part of the expression for 'if'. Line: %i" % parsed_line[0].line))
             cond = evaluate([parsed_line[1]] if not isinstance(parsed_line[1], list) else parsed_line[1], env)
+            ret, c = None, 0
+            blocs = parsed_line[2:]
+            for i, b in enumerate(blocs):
+                if not isinstance(b, list) and b.value == 'else':
+                    c = i
+                    break
             if cond:
-                for elem in parsed_line[2:]:
-                    evaluate([elem] if not isinstance(elem, list) else elem, env)
-            return None
+                for _, elem in enumerate(blocs[:c] if c else blocs):
+                    ret = evaluate([elem] if not isinstance(elem, list) else elem, env)
+            else:
+                if c:
+                    for _, elem in enumerate(blocs[c:]):
+                        ret = evaluate([elem] if not isinstance(elem, list) else elem, env)
+            return ret
         if parsed_line[0].value == 'while':
             require(len(parsed_line) >= 3,
                 SyntaxError("Missing a part of the expression for 'while'. Line: %i" % parsed_line[0].line))
@@ -131,7 +148,7 @@ def evaluate(parsed_line, env):
             require(len(parsed_line) == 3, ValueError("'alias' missing an argument : method. Line: %i" % parsed_line[0].line))
             env["alias"][parsed_line[1].value] = parsed_line[2].value
     if parsed_line[0].typ in ('NUMBER', 'STRING', 'BOOL', 'ARRAY'):
-        return parsed_line[0].value
+        return atom(parsed_line[0]).value
     return None
 
 

@@ -20,7 +20,7 @@ b = "hello"
 
 *note 2*: on utilise l'écriture en blocs uniquement dans la rédaction du corps d'une fonction / boucle / condition
 
-*note 3*: dans les blocs à base de `()` ayant plus qu'une instruction, chaque instruction se termine par un `;` sauf la dernière
+*note 3*: dans les blocs à base de `()` ayant plus qu'une instruction, chaque instruction se termine par un `;` **sauf** la dernière
 
 ## Déclaration de variables
 
@@ -44,14 +44,16 @@ r'[A-Za-z_$][A-Za-z0-9_\?-]*'
 var = 10  # scope global
 X = function (void) (
     var = 12;
+    print << var;
     Xprime = function(void) (var);
-    Xprime << 0;
+    print << (Xprime << 0);
     var
 )
-var
+X << 0
+print << var
 ```
 
-L'exécution du script ici renverra succesivement :
+L'exécution du script ci-dessus affichera succesivement :
 
 * le `var` du scope **X** (12)
 
@@ -62,7 +64,8 @@ L'exécution du script ici renverra succesivement :
 ## Déclaration de fonctions
 
 *syntaxe*:
-```nom-de-fonction = function (arg1 arg2) (
+```
+nom-de-fonction = function (arg1 arg2) (
     reste-du-code
 )
 ```
@@ -121,15 +124,29 @@ while (i++ < (length << list)) (
 
 ## Condition
 
-*syntaxe*: `if condition then`
+*syntaxe*: `if condition then [else other-then]`
 
 *note*: `condition`, et `then` peuvent être des blocs (un seul bloc) ou de simples expressions
 
-*note 2*: uniquement **si** `condition` est vrai on que évaluera `then`
+*note 2*: uniquement **si** `condition` est vraie on que évaluera `then`
 
-*note 3*: pour faire un `else`, on écrira juste un `if` avec la condition inverse :)
+*note 3*: le `else` est optionnel. **si** `condition` est fausse et que `else` est spécifié, alors `other-then` sera évalué
 
 *note 4*: `and` se traduit par `&` (qui est aussi un opérateur binaire), `or` par `|` (même remarque) et si on veut faire un `xor` on utilisera `^` (même remarque)
+
+*note 5*: un `if-else` retourne la valeur de la dernière expression évaluée. Par exemple, ici `a` prendra la valeur 5 :
+
+```
+a = if (true) (
+    5
+) else (
+    2
+)
+```
+
+Qui au passage est strictement équivalent à :
+
+`a = if true 5 else 2`
 
 ## Types
 
@@ -157,8 +174,8 @@ while (i++ < (length << list)) (
 
 Créer une struct revient à créer ce que l'on appelle `class` dans d'autres langages.
 
-*syntaxe*:
-```objet = struct (
+*syntaxe*: ```
+objet = struct (
     create = function (argument) (
         code
     );

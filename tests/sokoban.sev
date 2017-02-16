@@ -18,7 +18,7 @@ World = struct (
     _height = 10;
     _can_play = false;
 
-    _create = function (void) (
+    create = function (void) (
         $check_map << 0  # pour être sûr qu'on ait autant de goals que de box
     );
 
@@ -66,7 +66,6 @@ World = struct (
         win = false;
 
         if ((__box_count > 0) & (__goals_count == 0)) (win = true);
-
         win
     );
 
@@ -93,7 +92,7 @@ Player = struct (
     _x = 0;
     _y = 0;
 
-    _create = function (x y world) (
+    create = function (x y world) (
         _x = x;
         _y = y;
         _world = world
@@ -163,8 +162,7 @@ canplay = world::$canPlay? << 0
 
 if canplay (
     playing = true
-)
-if (canplay != true) (
+) else (
     playing = false;
     print << "Can not play, there are errors on the board"
 )
@@ -175,7 +173,7 @@ user_cmd = function (void) (
 
     if (_in == "help") (
         print << "You can type any of these commands :" $10
-                 "left (go to the left)" $ 10
+                 "left (go to the left)" $10
                  "right (go to the right)" $10
                  "up (go forward)" $10
                  "down (go downward)" $10
@@ -184,23 +182,35 @@ user_cmd = function (void) (
     );
     if (_in == "left") (
         _r = player::$move << -1 0;
-        if _r (print << "Moved to left");
-        if (not _r) (print << "Can not move to left")
+        if _r (
+            print << "Moved to left"
+        ) else (
+            print << "Can not move to left"
+        )
     );
     if (_in == "right") (
         _r = player::$move << 1 0;
-        if _r (print << "Moved to right");
-        if (not _r) (print << "Can not move to ")
+        if _r (
+            print << "Moved to right"
+        ) else (
+            print << "Can not move to "
+        )
     );
     if (_in == "up") (
         _r = player::$move << 0 -1;
-        if _r (print << "Moved forward");
-        if (not _r) (print << "Can not move to ")
+        if _r (
+            print << "Moved forward"
+        ) else (
+            print << "Can not move to "
+        )
     );
     if (_in == "down") (
         _r = player::$move << 0 1;
-        if _r (print << "Moved downward");
-        if (not _r) (print << "Can not move to ")
+        if _r (
+            print << "Moved downward"
+        ) else (
+            print << "Can not move to "
+        )
     );
     if (_in == "print") (
         draw << 0
@@ -210,18 +220,18 @@ user_cmd = function (void) (
     )
 )
 
-turns = 0
+turns = -1
 
 while playing (
     user_cmd << 0;
-    if (world::$check_winning << 0) (
-        print << "You win !";
+    ret = world::$check_winning << 0;
+    if (ret == true) (
+        print << $10 "You won !";
         playing = false
     );
     turns ++
 )
-
-print << "You played during " tour " turns !"
+print << "You played during " turns " turns !"
 
 
 
