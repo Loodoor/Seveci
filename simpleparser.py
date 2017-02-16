@@ -88,7 +88,7 @@ def evaluate(parsed_line, env):
                 if args:
                     args = [evaluate([a] if not isinstance(a, list) else a, env) for a in args]
                 m = consume_modules(module, end)
-                return m(*args) if (isinstance(m, type(lambda:None)) or isinstance(m, type(abs))) else m
+                return m(*args) if (isinstance(m, (type(lambda:None), type(abs), Procedure))) else m
             if parsed_line[1].typ == 'ASSIGN':
                 if "alias" in env.keys():
                     require(parsed_line[0].value not in env["alias"].keys(),

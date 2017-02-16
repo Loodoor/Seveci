@@ -170,6 +170,7 @@ if canplay (
 user_cmd = function (void) (
     printc << $10;
     _in = input << "Command> ";
+    played = false;
 
     if (_in == "help") (
         print << "You can type any of these commands :" $10
@@ -186,7 +187,8 @@ user_cmd = function (void) (
             print << "Moved to left"
         ) else (
             print << "Can not move to left"
-        )
+        );
+        played = true
     );
     if (_in == "right") (
         _r = player::$move << 1 0;
@@ -194,7 +196,8 @@ user_cmd = function (void) (
             print << "Moved to right"
         ) else (
             print << "Can not move to "
-        )
+        );
+        played = true
     );
     if (_in == "up") (
         _r = player::$move << 0 -1;
@@ -202,7 +205,8 @@ user_cmd = function (void) (
             print << "Moved forward"
         ) else (
             print << "Can not move to "
-        )
+        );
+        played = true
     );
     if (_in == "down") (
         _r = player::$move << 0 1;
@@ -210,26 +214,31 @@ user_cmd = function (void) (
             print << "Moved downward"
         ) else (
             print << "Can not move to "
-        )
+        );
+        played = true
     );
     if (_in == "print") (
         draw << 0
     );
     if (_in == "end") (
         playing = false
-    )
+    );
+
+    played
 )
 
 turns = -1
 
 while playing (
-    user_cmd << 0;
+    ruc = user_cmd << 0;
     ret = world::$check_winning << 0;
     if (ret == true) (
         print << $10 "You won !";
         playing = false
     );
-    turns ++
+    if (ruc) (
+        turns ++
+    )
 )
 print << "You played during " turns " turns !"
 
