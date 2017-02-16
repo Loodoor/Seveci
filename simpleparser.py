@@ -149,7 +149,7 @@ def evaluate(parsed_line, env):
         if parsed_line[0].value == "alias":
             require(len(parsed_line) == 3, ValueError("'alias' missing an argument : method. Line: %i" % parsed_line[0].line))
             env["alias"][parsed_line[1].value] = parsed_line[2].value
-    if parsed_line[0].typ in ('NUMBER', 'STRING', 'BOOL', 'ARRAY'):
+    if parsed_line[0].typ in types:
         return atom(parsed_line[0]).value
     return None
 
@@ -177,6 +177,34 @@ def check_parsing(required_tok_type, repr_of_type):
                 raise ParseError("Can't continue to parse.\nLine: %i, %s" % (_tokens[-1].line, assemble(_tokens)))
         return checker
     return decorator
+
+
+@check_parsing('DICT_END', '}')
+def parse_dict(context, tokens):
+    hashmap = {}
+    first = tokens[0:1]
+    while not isinstance(first, Token):
+        first = first[0:1]
+        if isinstance(first, list):
+            first = first[0]
+
+    key = True
+    t_key = ""
+    while tokens[0].typ != 'DICT_END':
+        val = parse(context, tokens)
+
+        if key and val.typ != 'DICT_ASSIGN':
+            t_key = val.value
+        elif val.typ == 'DICT_ASSIGN' and key:
+            key = False
+            pass
+        elif val is not None and t_key and not key:
+            hashmap[t_key] = val.value
+            t_key = ""
+            key = True
+    tok_hashmap = Token('DICT', hashmap, first.line, first.column)
+
+    return tok_hashmap
 
 
 @check_parsing('ARRAY_END', ']')
@@ -209,7 +237,9 @@ def parse(context, tokens):
     # require(token.typ != 'BLOC_END',
         # SyntaxError("Unexpected '%s', line: %i, column: %i (instead of '(')\n%s" % (token.value, token.line, token.column, context[token.line - 1])))
 
-    if token.typ == 'ARRAY_START':
+    if token.typ == 'DICT_START':
+        return parse_dict(context, tokens)
+    elif token.typ == 'ARRAY_START':
         return parse_array(context, tokens)
     elif token.typ == 'BLOC_START':
         return parse_bloc(context, tokens)

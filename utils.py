@@ -8,6 +8,7 @@ Token = namedtuple('Token', ['typ', 'value', 'line', 'column'])
 keywords = (
     "function", "struct", "if", "else", "while", "alias"
 )
+types = ('NUMBER', 'STRING', 'BOOL', 'ARRAY', 'DICT')
 
 
 class ParseError(Exception):

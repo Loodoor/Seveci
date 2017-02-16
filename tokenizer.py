@@ -14,6 +14,8 @@ class TokenSpecification(Enum):
 
     NUMBER = r'-?\d+(\.\d*)?'
 
+    DICT_ASSIGN = r'=>'
+
     OP = r'(\+|-|\*|/|%|\*\*|@@|@|@~)'
     BINARYOP = r'(\&|\^|\||rshift|lshift)'
     COND = r'(<|>|==|<=|>=|!=)'
@@ -24,6 +26,7 @@ class TokenSpecification(Enum):
     ASSIGN = r'='
     BLOC_START, BLOC_END = r'\(', r'\)'
     ARRAY_START, ARRAY_END = r'\[', r'\]'
+    DICT_START, DICT_END = r'\{', r'\}'
 
     COMMENT = r'#.*'
 
@@ -51,7 +54,10 @@ def tokenize(code):
         elif kind == 'NEWLINE':
             line_num += 1
             line_start = mo.end()
-            if count_toks_kind(tokenized_line, 'BLOC_START') == count_toks_kind(tokenized_line, 'BLOC_END') and tokenized_line:
+            if count_toks_kind(tokenized_line, 'BLOC_START') == count_toks_kind(tokenized_line, 'BLOC_END') and \
+                    count_toks_kind(tokenized_line, 'ARRAY_START') == count_toks_kind(tokenized_line, 'ARRAY_END') and \
+                    count_toks_kind(tokenized_line, 'DICT_START') == count_toks_kind(tokenized_line, 'DICT_END') and \
+                    tokenized_line:
                 tokenized_line.insert(0, Token('BLOC_START', '(', line_num, 0))
                 tokenized_line.append(Token('BLOC_END', ')', line_num, line_start + 1))
                 yield tokenized_line

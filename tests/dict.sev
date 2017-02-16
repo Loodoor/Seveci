@@ -1,0 +1,9 @@
+my-dict = {
+    key => 0
+    truc => [1 3 5 7 9]
+};
+
+print << (my-dict @ "truc");
+
+oth = {a => 5 b => 6}
+print << (oth @ "a")
