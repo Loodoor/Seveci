@@ -1,0 +1,17 @@
+i = 99
+s = ""
+while i (
+    if (i > 1) (
+        print << i " bottles of beer of the wall, " i " bottles of beer.";
+        if (i > 2) (
+            s = concat << (i - 1) " bootles"
+        ) else (
+            s = "1 bottle"
+        )
+    ) else (i == 1) (
+        print << "1 bottle of beer on the wall, 1 bottle of beer.";
+        s = "no more beer on the wall !"
+    );
+    print << "Take one down, pass it round, " s $10 "--";
+    i --
+)

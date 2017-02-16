@@ -1,0 +1,3 @@
+method = function (x) (
+    function (void) (x)
+)
