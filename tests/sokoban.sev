@@ -227,7 +227,7 @@ user_cmd = function (void) (
     played
 )
 
-turns = -1
+turns = 0
 
 while playing (
     ruc = user_cmd << 0;
