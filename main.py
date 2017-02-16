@@ -21,9 +21,11 @@ arg_parser.add_argument('-e', '--execute', dest='exe', action='store_true',
                         help='execute the given input file')
 arg_parser.add_argument('-i', '--interpreter', dest='repl', action='store_true',
                         help='start an interpreter')
+arg_parser.add_argument('-d', '--debug', dest='debug', action='store_true',
+                        help='turn on debug mode')
 
 
-def main(path="", lex=False, ast=False, exe=False, repl=False):
+def main(path="", lex=False, ast=False, exe=False, repl=False, debug=False):
     if path:
         path = os.path.abspath(path)
         with open(path, "r", encoding="utf-8") as file:
@@ -68,7 +70,7 @@ def main(path="", lex=False, ast=False, exe=False, repl=False):
         env = standard_env()
         for line in parsed:
             val = simpleparser.evaluate(line, env)
-            if val:
+            if val and debug:
                 print(mtoa(val))
 
 

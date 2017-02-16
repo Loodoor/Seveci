@@ -6,9 +6,21 @@ import operator as op
 
 Token = namedtuple('Token', ['typ', 'value', 'line', 'column'])
 keywords = (
-    "function", "struct", "if", "else", "while", "alias"
+    "function", "struct", "if", "else", "while"
 )
 types = ('NUMBER', 'STRING', 'BOOL', 'ARRAY', 'DICT')
+postfix_int = ('++', '--')
+postfix_others = ('@@')
+
+
+class T:
+    def __init__(self):
+        pass
+
+    def meth(self):
+        pass
+
+t = T()
 
 
 class ParseError(Exception):
@@ -79,16 +91,16 @@ def standard_env():
         'list': lambda *x: list(x), 'list?': lambda x: isinstance(x, list),
         '@@': lambda x: x[1:], 'count': lambda x, y: x.count(y),
         'cons': lambda x, y: [x] + y if not isinstance(x, list) and isinstance(y, list) else x + [y],
+        'setitem': op.setitem,
 
         # strings
-        'split': lambda x, y: x.split(y),
+        'split': lambda x, y: x.split(y), 'concat': lambda *x: "".join(str(c) for c in x),
 
         # autres
         'time': time.time, 'round': round, 'abs': abs, 'zip': lambda *x: list(zip(*x)),
         'map': lambda *x: list(map(*x)), 'max': max, 'min': min,
         'print': lambda *x: print(mtoa(*x), flush=True), 'printc': lambda x: print(x, end='', flush=True), 'input': input,
         'include': lambda x: _env.update({x: __import__(x)}),
-        'load': lambda x: (_env.update(load(x)), None)[1],
 
         # fichiers
         'open-input-file': open, 'open-output-file': lambda f: open(f, 'w'), 'close-file': lambda f: f.close(),
@@ -103,24 +115,15 @@ def standard_env():
 
         # constantes
         '$10': "\n", "$13": "\r", "$9": "\t",
-
-        # alias
-        "alias": {"$": "load"}
     })
     return _env
 
 
-def load(path):
-    with open(path) as sr:
-        code = sr.readlines()
-
-    _env = standard_env()
-    for line in code:
-        if line.count('(') == line.count(')') and line.strip()[:2] != comment:
-            parsed = parse(line)
-            eval_code(parsed, _env)
-    del code
-    return _env
+def reduce_parsed(parsed):
+    if parsed:
+        while isinstance(parsed[0], list) and len(parsed) == 1:
+            parsed = parsed[0]
+    return parsed
 
 
 def split_toks_kind(line, kind):
@@ -135,7 +138,12 @@ def split_toks_kind(line, kind):
 
 def tok_kind_in(line, kind):
     for tok in line:
-        if tok.typ == kind:
+        if isinstance(tok, list):
+            t = tok_kind_in(tok, kind)
+            if t:
+                return t
+            pass
+        elif tok.typ == kind:
             return True
     return False
 

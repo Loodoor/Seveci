@@ -1,3 +1,4 @@
+import tokenizer
 from utils import *
 
 
@@ -34,6 +35,11 @@ class Struct(object):
             return envi
         except TypeError as ter:
             raise StructConstructionError("Missing entry point 'create'") from ter
+
+
+
+def isfunc(m):
+    return isinstance(m, (type(lambda: None), type(abs), Procedure, type(t.meth)))
 
 
 def evaluate(parsed_line, env):
@@ -76,40 +82,57 @@ def evaluate(parsed_line, env):
                         return getattr(_module, modules[0])
                     raise ValueError("Too much sub modules")
 
-    if not len(parsed_line):
-        return  # there is not use to parse an empty bloc
+    if len(parsed_line):
+        parsed_line = reduce_parsed(parsed_line)
+    else:
+        return  # there is no use to parse an empty bloc
+
+    if len(parsed_line) > 1 and isinstance(parsed_line[0], list) and tok_kind_in(parsed_line, 'CALL'):
+        print("in pre reading")
+        print(parsed_line)
+        o = reduce_parsed(parsed_line.pop(0))
+        temp = evaluate(o, env)
+        parsed_line.insert(0, Token('PROC', temp, o[0].line, o[0].column - 1))
+        print(parsed_line)
+
     if len(parsed_line) > 1 and isinstance(parsed_line[1], Token) and parsed_line[1].typ in ('OP', 'BINARYOP', 'COND'):
         require(len(parsed_line) >= 3,
             ValueError("Missing arguments for %s, line: %i" % (parsed_line[1].value, parsed_line[1].line)))
         return eval_math(parsed_line)
-    if parsed_line[0].typ == 'ID':
+    if parsed_line[0].typ in ('ID', 'PROC') and len(parsed_line) > 1:
+        if parsed_line[1].typ == 'CALL':
+            require(env.find(parsed_line[0].value),
+                RuntimeError("'%s' does not exist, line: %i" % (parsed_line[0].value, parsed_line[0].line)))
+            val = parsed_line[0].value
+            return env.find(val)(*[evaluate([bloc] if not isinstance(bloc, list) else bloc, env) for bloc in parsed_line[2:]])
+    if parsed_line[0].typ in ('ID', 'PROC'):
         if len(parsed_line) > 1:
+            if parsed_line[0].value == 'load':
+                _env = Env()
+                with open(evaluate([parsed_line[2]], env)) as sr:
+                    code = sr.read()
+                ts = [tok for tok in tokenizer.tokenize(code) if is_ok(tok)]
+                ps = [p for p in [parse(code, toks) for toks in ts] if is_ok(p)]
+                evaluate(ps, _env)
+                return _env
             if parsed_line[1].typ == 'CALL_FROM':
                 callfrom, args = eval_callfrom(parsed_line)
                 module, end = callfrom[0], callfrom[1:]
                 if args:
                     args = [evaluate([a] if not isinstance(a, list) else a, env) for a in args]
                 m = consume_modules(module, end)
-                return m(*args) if (isinstance(m, (type(lambda:None), type(abs), Procedure))) else m
+                return m(*args) if isfunc(m) else m
             if parsed_line[1].typ == 'ASSIGN':
-                if "alias" in env.keys():
-                    require(parsed_line[0].value not in env["alias"].keys(),
-                            RuntimeError("'%s' is already an alias, overwritting it would cause problems" % parsed_line[0].value))
                 env[parsed_line[0].value] = evaluate(parsed_line[2:], env)
                 return None
-            if parsed_line[1].typ == 'CALL':
-                require(env.find(parsed_line[0].value) or parsed_line[0].value in env["alias"].keys(),
-                    RuntimeError("'%s' does not exist, line: %i" % (parsed_line[0].value, parsed_line[0].line)))
-                val = parsed_line[0].value if env.find(parsed_line[0].value) is not None else env["alias"][parsed_line[0].value]
-                return env.find(val)(*[evaluate([bloc] if not isinstance(bloc, list) else bloc, env) for bloc in parsed_line[2:]])
             if parsed_line[1].typ == 'POSTFIX_OP':
-                if parsed_line[1].value in ('++', '--'):
+                if parsed_line[1].value in postfix_int:
                     value = +1
                     if parsed_line[1].value == '--':
                         value = -1
                     env[parsed_line[0].value] += value
                     return env[parsed_line[0].value]
-                elif parsed_line[1].value in ('@@'):
+                elif parsed_line[1].value in postfix_others:
                     return env.find(parsed_line[1].value)(evaluate([parsed_line[0]], env))
         return env.find(parsed_line[0].value)
     if parsed_line[0].typ == 'kwtype':
@@ -148,9 +171,6 @@ def evaluate(parsed_line, env):
                 for expr in parsed_line[2:]:
                     evaluate([expr] if not isinstance(expr, list) else expr, env)
             return None
-        if parsed_line[0].value == "alias":
-            require(len(parsed_line) == 3, ValueError("'alias' missing an argument : method. Line: %i" % parsed_line[0].line))
-            env["alias"][parsed_line[1].value] = parsed_line[2].value
     if parsed_line[0].typ in types:
         return atom(parsed_line[0]).value
     return None
