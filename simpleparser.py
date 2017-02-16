@@ -76,6 +76,8 @@ def evaluate(parsed_line, env):
                         return getattr(_module, modules[0])
                     raise ValueError("Too much sub modules")
 
+    if not len(parsed_line):
+        return  # there is not use to parse an empty bloc
     if len(parsed_line) > 1 and isinstance(parsed_line[1], Token) and parsed_line[1].typ in ('OP', 'BINARYOP', 'COND'):
         require(len(parsed_line) >= 3,
             ValueError("Missing arguments for %s, line: %i" % (parsed_line[1].value, parsed_line[1].line)))

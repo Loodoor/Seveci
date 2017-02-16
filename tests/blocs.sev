@@ -1,0 +1,7 @@
+print << "test";
+print << "hello";
+
+if (true) (
+    print << "if";
+    print << "true";
+)

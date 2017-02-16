@@ -20,7 +20,7 @@ b = "hello"
 
 *note 2*: on utilise l'écriture en blocs uniquement dans la rédaction du corps d'une fonction / boucle / condition
 
-*note 3*: dans les blocs à base de `()` ayant plus qu'une instruction, chaque instruction se termine par un `;` **sauf** la dernière
+*note 3*: dans les blocs à base de `()` ayant plus qu'une instruction, chaque instruction se termine par un `;` *sauf* la dernière où il est facultatif
 
 ## Déclaration de variables
 
