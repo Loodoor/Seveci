@@ -75,9 +75,9 @@ def standard_env():
         '<=': op.le, '!=': op.ne, '==': op.eq,
 
         # listes
-        '@': op.getitem, 'setitem': lambda lst, i, new: op.setitem(lst, i, new), '@~': op.delitem, 'length': len,
+        '@': op.getitem, '@=': lambda lst, v: op.setitem(lst, v[0], v[1]), '@~': op.delitem, 'length': len,
         'list': lambda *x: list(x), 'list?': lambda x: isinstance(x, list),
-        '@@': lambda *x: x[1:], 'count': lambda x, y: x.count(y),
+        '@@': lambda x: x[1:], 'count': lambda x, y: x.count(y),
         'cons': lambda x, y: [x] + y if not isinstance(x, list) and isinstance(y, list) else x + [y],
 
         # strings

@@ -103,12 +103,14 @@ def evaluate(parsed_line, env):
                 val = parsed_line[0].value if env.find(parsed_line[0].value) is not None else env["alias"][parsed_line[0].value]
                 return env.find(val)(*[evaluate([bloc] if not isinstance(bloc, list) else bloc, env) for bloc in parsed_line[2:]])
             if parsed_line[1].typ == 'POSTFIX_OP':
-                require(isinstance(env.find(parsed_line[0].value), (int, float)), TypeError("Require a number for a postfix operator"))
-                value = +1
-                if parsed_line[1].value == '--':
-                    value = -1
-                env[parsed_line[0].value] += value
-                return env[parsed_line[0].value]
+                if parsed_line[1].value in ('++', '--'):
+                    value = +1
+                    if parsed_line[1].value == '--':
+                        value = -1
+                    env[parsed_line[0].value] += value
+                    return env[parsed_line[0].value]
+                elif parsed_line[1].value in ('@@'):
+                    return env.find(parsed_line[1].value)(evaluate([parsed_line[0]], env))
         return env.find(parsed_line[0].value)
     if parsed_line[0].typ == 'kwtype':
         if parsed_line[0].value == 'function':

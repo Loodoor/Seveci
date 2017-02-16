@@ -1,3 +1,17 @@
 my-array = [
     0 1 2 3 4 5 6 7 8 9
 ]
+
+my-array @= [0 4]
+
+print << my-array
+
+my-array @~ 0
+
+print << my-array
+print << (length << my-array)
+
+print << (my-array @@)
+print << (count << my-array 0)
+print << (cons << my-array 2)
+print << (cons << 2 my-array)

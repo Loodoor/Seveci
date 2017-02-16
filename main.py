@@ -43,7 +43,7 @@ def main(path="", lex=False, ast=False, exe=False, repl=False):
         if not ast: print_r(tokens)
     if ast:
         parsed = [p for p in [simpleparser.parse(content, toks) for toks in tokens] if is_ok(p)]
-        if not exe and not transpile: print_r(parsed)
+        if not exe: print_r(parsed)
     if repl:
         print("Starting a REPL instance. Type !go to execute your code")
         env = standard_env()
