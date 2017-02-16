@@ -1,7 +1,6 @@
 import os
 import argparse
 import tokenizer
-import transpiler
 import simpleparser
 from utils import *
 
@@ -22,11 +21,9 @@ arg_parser.add_argument('-e', '--execute', dest='exe', action='store_true',
                         help='execute the given input file')
 arg_parser.add_argument('-i', '--interpreter', dest='repl', action='store_true',
                         help='start an interpreter')
-arg_parser.add_argument('-t', '--transpile', dest='transpile', action='store_true',
-                        help='transpile the given seveci code to python')
 
 
-def main(path="", lex=False, ast=False, exe=False, repl=False, transpile=False):
+def main(path="", lex=False, ast=False, exe=False, repl=False):
     if path:
         path = os.path.abspath(path)
         with open(path, "r", encoding="utf-8") as file:
@@ -34,7 +31,7 @@ def main(path="", lex=False, ast=False, exe=False, repl=False, transpile=False):
 
     if ast:
         lex = True
-    if exe or transpile:
+    if exe:
         lex = True
         ast = True
 
@@ -73,12 +70,6 @@ def main(path="", lex=False, ast=False, exe=False, repl=False, transpile=False):
             val = simpleparser.evaluate(line, env)
             if val:
                 print(mtoa(val))
-    if transpile:
-        out = []
-        transpiler.transpile(parsed, out)
-        with open(path.split('.')[0] + '.py', 'w') as file:
-            for line in out:
-                file.write(line + "\n")
 
 
 if __name__ == '__main__':
