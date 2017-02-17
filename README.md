@@ -96,6 +96,15 @@ L'exécution du script ci-dessus affichera succesivement :
 
 * le `var` du scope **global** (10)
 
+## Opérations (arithmétiques, booléennes ...)
+
+*syntaxe*: `val op val2 op2 val3 ...`
+
+*note*: depuis le 23ème commit, cette écriture est maintenant possible, et strictement équivalente à celle-ci (par exemple) :
+`val op (val2 op2 (val3 ...))`
+
+*note 2*: à noter par contre qu'aucune des deux méthodes n'offre de priorité aux opérateurs, donc mathématiquement parlant, `1 + 2 / 4` est faux car ne donnera pas `1.5` mais `0.75`
+
 ## Déclaration de fonctions
 
 *syntaxe*:
@@ -191,7 +200,7 @@ while ( (a = (a ++)) < 10 ) (
 
 *note 3*: le `else` est optionnel. **si** `condition` est fausse et que `else` est spécifié, alors `other-then` sera évalué
 
-*note 4*: `and` se traduit par `&` (qui est aussi un opérateur binaire), `or` par `|` (même remarque) et si on veut faire un `xor` on utilisera `^` (même remarque)
+*note 4*: `and` se traduit par `&` (qui est aussi un opérateur binaire), `or` par `|` (même remarque) et si on veut faire un `xor` on utilisera `^` (même remarque). Pour un `and` classique, ne jouant pas sur les valeurs binaires, il y a `&&`
 
 *note 5*: un `if-else` retourne la valeur de la dernière expression évaluée. Par exemple, ici `a` prendra la valeur 5 :
 

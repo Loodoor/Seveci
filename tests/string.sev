@@ -1,0 +1,9 @@
+truc = "test" + $10 + $10 + "hello"
+print << "--"
+print << truc
+print << "--"
+
+machin = "1" + "2" + "3" + "5"
+print << machin
+
+print << (1 + 2 + 3 + 4) 15

@@ -50,15 +50,21 @@ def evaluate(parsed_line, env):
         if isinstance(line, list):
             f, _op, *ts = line
 
-            if len(ts) == 1: s = ts[0]
-            elif not len(ts): s = None
+            if len(ts) == 1:
+                s = ts[0]
+            elif not len(ts):
+                s = None
+            else:
+                s = eval_math(ts)
 
             if _op.value not in ASSIGNERS + POSTFIX + ('<<',):
                 z = env.find(_op.value)(eval_math(f), eval_math(s))
             else:
                 z = evaluate(line, env)
             return z
-        return line.value if line.typ != 'ID' else env.find(line.value)
+        elif isinstance(line, Token):
+            return line.value if line.typ != 'ID' else env.find(line.value)
+        return line
 
     def eval_callfrom(line):
         w = split_toks_kind(line, 'CALL_FROM')
