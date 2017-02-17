@@ -9,3 +9,7 @@ print << "10 >> " a
 a ++
 
 print << "11 >> " a
+
+a--
+
+print << "10 >> " a

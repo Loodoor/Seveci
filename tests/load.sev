@@ -1,5 +1,6 @@
 module = load << "tests/test.sev"
 
 a = (module::method << 5)
+print << (a << 0)
 
-(module::method << 5) << 0
+print << ((module::method << 5) << 0)

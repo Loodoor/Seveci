@@ -1,5 +1,7 @@
 # Seveci
 
+*Un langage de programmation interprété en Python.*
+
 ## Blocs
 
 *syntaxe*: `(code)` ou `(code; code2; codeN)`
@@ -14,13 +16,15 @@ b = "hello"
 On fera ainsi en Seveci :
 
 ```
-a = 10
-b = "hello"
+a = 10;
+b = "hello";
 ```
 
 *note 2*: on utilise l'écriture en blocs uniquement dans la rédaction du corps d'une fonction / boucle / condition
 
-*note 3*: dans les blocs à base de `()` ayant plus qu'une instruction, chaque instruction se termine par un `;` *sauf* la dernière où il est facultatif
+*note 3*: les `;` sont facultatifs hors blocs
+
+*note 4*: dans les blocs à base de `()` ayant plus qu'une instruction, chaque instruction se termine par un `;` *sauf* la dernière où il est facultatif
 
 ## Déclaration de variables
 
@@ -29,10 +33,41 @@ b = "hello"
 *note*: la règle définissant le nommage des variables et la même que celle appliquée au nommage des fonctions, et est la suivante :
 
 ```python
-r'[A-Za-z_$][A-Za-z0-9_\?-]*'
+r'[A-Za-z_$]([A-Za-z0-9_\?-]*[A-Za-z0-9]|[A-Za-z0-9]*\??)'
 ```
 
-*note 2*: une valeur peut être de n'importe quel type (voir section `Types`), voir même une expression algébrique (chaque opérande doit néanmoins être entouré de parenthèses)
+*note 2*: une valeur peut être de n'importe quel type (voir section `Types`), voir même une expression algébrique (chaque opérande doit néanmoins être entourée de parenthèses)
+
+### Déclarer une variable de manière "aveugle"
+
+*syntaxe*: `variable = variable`
+
+*note*: quand on déclare une variable comme valant elle même, on lui assigne `None` par défaut. Il peut parfois être utile, et plus rapide, de créer une variable OU BIEN de l'incrémenter / décrementer sans savoir si elle a bien été créée avant, pour économiser de la place par exemple. I.E. :
+
+```
+while true (
+    i = i ++;
+    print << i
+)
+```
+
+A la place de :
+
+```
+i = 0
+while true (
+    i ++;
+    print << i
+)
+```
+
+*note 2*: `i` vaudra 1 dans `i = i ++`
+
+### Déclarer une variable de manière paresseuse
+
+*syntaxe*: `var := valeur`
+
+*note*: il peut également être utile de définir une variable uniquement si elle n'existe pas (rappelons que `=` peut créer une variable mais si elle existe déjà, cela modifiera sa valeur)
 
 ### Utilisation de la valeur d'une variable
 
@@ -111,16 +146,42 @@ while ((10 * (15 + 212)) >= 15) (
 
 *note 2*: `statements` est un seul bloc
 
+*note 3*: une boucle `while` possède son propre environnement, lié à son environnement global
+
 ## Boucle for
 
 Il n'y a en réalité pas de boucle `for`. Pour en simuler une (parcourant les éléments d'un tableau par exemple), on fera ainsi :
 
 ```
 i = -1
-while (i++ < (length << list)) (
+while (i ++ < (length << list)) (
     elem = list @ i
 )
 ```
+
+On peut également écrire ceci, en se servant de l'opérateur `:=` :
+
+```
+while ((i := 0) | ((i ++) && (i < 10))) (
+    elem = list @ i
+)
+```
+
+*note 1*: l'opérateur `|` est obligatoire entre les opérandes `(i := 0)` et `((i ++) & (i < 10))`, car une opération avec `:=` renvoie `true` à sa création et `false` par la suite
+
+*note 2*: ici on a défini les bornes 0 et 10 pour notre *simili*-boucle `for`, comme ceci : `]0, 10[` car `i` est modifié avant qu'on le traite
+
+*note 3*: l'opérateur `&&` est obligatoire car si `i` passe par 2, `2 & true` est comme `2 & 1`, qui vaut `0`, donc la boucle s'arrêtera !
+
+Enfin, voici une dernière méthode qui utilise l'assignement aveugle :
+
+```
+while ( (a = (a ++)) < 10 ) (
+    elem = list @ a
+)
+```
+
+*note*: ici encore l'intervalle de `a` sera `]0, 10[`, à cause du fonctionnement de l'assignement aveugle
 
 ## Condition
 
@@ -169,6 +230,21 @@ Qui au passage est strictement équivalent à :
 *syntaxe*: `[valeur1 valeur2 valeurN]`
 
 *note*: un tableau peut contenir n'importe quel type de valeur et même d'autres tableaux
+
+### Dictionnaire
+
+*syntaxe*: `{key => value key2 => value2 keyN => valueN}`
+
+*note*: les clés n'ont pas besoin d'être exprimées en chaine de caractères, elles seront traduites comme tel à la création du dictionnaire. I.E. :
+
+```
+mon-dico = {
+    hello => 5
+    salut => 10
+}
+
+element = mon-dico @ "hello"  # element = 5
+```
 
 ### Type personnalisé : struct
 
@@ -227,3 +303,9 @@ Après avoir instancié un objet que l'on a créé, on souhaite en utiliser ses 
 *note 2*: l'usage de `<<` est obligatoire car `module-name::fonction` est considéré comme une fonction pour l'interpréteur
 
 *note 3*: si la fonction ne prend pas d'arguments, ne pas lui en donner même si l'écriture `a-func = function (void) code` est à favoriser (pour raison de compatibilité avec les codes Python)
+
+## Importer un module Seveci
+
+*syntaxe*: `module-name = load << "chemin/vers/le/module"`
+
+*note*: par défaut, le chemin est relatif à l'environnement de travail de l'interpréteur
