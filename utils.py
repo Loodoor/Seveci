@@ -10,7 +10,9 @@ keywords = (
 )
 types = ('NUMBER', 'STRING', 'BOOL', 'ARRAY', 'DICT')
 postfix_int = ('++', '--')
-postfix_others = ('@@')
+postfix_others = ('@@', ':~')
+POSTFIX = postfix_int + postfix_others
+ASSIGNERS = ('=', ':=')
 
 
 class T:
@@ -85,6 +87,7 @@ def standard_env():
         # Conditions
         '>': op.gt, '<': op.lt, '>=': op.ge,
         '<=': op.le, '!=': op.ne, '==': op.eq,
+        '&&': lambda a, b: a and b,
 
         # listes
         '@': op.getitem, '@=': lambda lst, v: op.setitem(lst, v[0], v[1]), '@~': op.delitem, 'length': len,
