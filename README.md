@@ -257,7 +257,8 @@ element = mon-dico @ "hello"  # element = 5
 
 Créer une struct revient à créer ce que l'on appelle `class` dans d'autres langages.
 
-*syntaxe*: ```
+*syntaxe*:
+```
 objet = struct (
     create = function (argument) (
         code
