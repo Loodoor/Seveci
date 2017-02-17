@@ -228,6 +228,14 @@ user_cmd = function (void) (
     played
 )
 
+pluralize = function (word i) (
+    r = word;
+    if (i > 1) (
+        r = concat << word "s"
+    );
+    r
+);
+
 turns = 0
 
 while playing (
@@ -241,7 +249,7 @@ while playing (
         turns ++
     )
 )
-print << "You played during " turns " turns !"
+print << "You played during " turns (pluralize << " turn" turns) " !"
 
 
 

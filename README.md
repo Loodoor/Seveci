@@ -146,8 +146,6 @@ while ((10 * (15 + 212)) >= 15) (
 
 *note 2*: `statements` est un seul bloc
 
-*note 3*: une boucle `while` possède son propre environnement, lié à son environnement global
-
 ## Boucle for
 
 Il n'y a en réalité pas de boucle `for`. Pour en simuler une (parcourant les éléments d'un tableau par exemple), on fera ainsi :

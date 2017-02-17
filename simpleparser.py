@@ -26,15 +26,17 @@ class Struct(object):
 
     def __call__(self, *args):
         try:
-            ret = self.env["create"](*args)
+            ret = self.env["create"]
+        except KeyError as ker:
+            raise StructConstructionError("Missing entry point 'create'") from ter
+        else:
+            ret = ret(*args)
             envi = Env()
             envi.update({k: v for k, v in self.env.items()})
 
             self.env = Env(outer=self.outer)
             self.env.update(envi)
             return envi
-        except TypeError as ter:
-            raise StructConstructionError("Missing entry point 'create'") from ter
 
 
 
@@ -46,8 +48,16 @@ def evaluate(parsed_line, env):
     def eval_math(line):
         nonlocal env
         if isinstance(line, list):
-            f, _op, s = line
-            return env.find(_op.value)(eval_math(f), eval_math(s))
+            f, _op, *ts = line
+
+            if len(ts) == 1: s = ts[0]
+            elif not len(ts): s = None
+
+            if _op.value not in ASSIGNERS + POSTFIX + ('<<',):
+                z = env.find(_op.value)(eval_math(f), eval_math(s))
+            else:
+                z = evaluate(line, env)
+            return z
         return line.value if line.typ != 'ID' else env.find(line.value)
 
     def eval_callfrom(line):
@@ -88,33 +98,30 @@ def evaluate(parsed_line, env):
         return  # there is no use to parse an empty bloc
 
     if len(parsed_line) > 1 and isinstance(parsed_line[0], list) and tok_kind_in(parsed_line, 'CALL'):
-        print("in pre reading")
-        print(parsed_line)
         o = reduce_parsed(parsed_line.pop(0))
         temp = evaluate(o, env)
         parsed_line.insert(0, Token('PROC', temp, o[0].line, o[0].column - 1))
-        print(parsed_line)
 
     if len(parsed_line) > 1 and isinstance(parsed_line[1], Token) and parsed_line[1].typ in ('OP', 'BINARYOP', 'COND'):
         require(len(parsed_line) >= 3,
             ValueError("Missing arguments for %s, line: %i" % (parsed_line[1].value, parsed_line[1].line)))
         return eval_math(parsed_line)
     if parsed_line[0].typ in ('ID', 'PROC') and len(parsed_line) > 1:
+        if parsed_line[0].value == 'load':
+            _env = Env()
+            with open(evaluate([parsed_line[2]], env)) as sr:
+                code = sr.read()
+            ts = [tok for tok in tokenizer.tokenize(code) if is_ok(tok)]
+            ps = [p for p in [parse(code, toks) for toks in ts] if is_ok(p)]
+            evaluate(ps, _env)
+            return _env
         if parsed_line[1].typ == 'CALL':
-            require(env.find(parsed_line[0].value),
+            require(env.find(parsed_line[0].value) or parsed_line[0].typ == 'PROC',
                 RuntimeError("'%s' does not exist, line: %i" % (parsed_line[0].value, parsed_line[0].line)))
-            val = parsed_line[0].value
-            return env.find(val)(*[evaluate([bloc] if not isinstance(bloc, list) else bloc, env) for bloc in parsed_line[2:]])
+            val = env.find(parsed_line[0].value) if parsed_line[0].typ == 'ID' else parsed_line[0].value
+            return val(*[evaluate([bloc] if not isinstance(bloc, list) else bloc, env) for bloc in parsed_line[2:]])
     if parsed_line[0].typ in ('ID', 'PROC'):
         if len(parsed_line) > 1:
-            if parsed_line[0].value == 'load':
-                _env = Env()
-                with open(evaluate([parsed_line[2]], env)) as sr:
-                    code = sr.read()
-                ts = [tok for tok in tokenizer.tokenize(code) if is_ok(tok)]
-                ps = [p for p in [parse(code, toks) for toks in ts] if is_ok(p)]
-                evaluate(ps, _env)
-                return _env
             if parsed_line[1].typ == 'CALL_FROM':
                 callfrom, args = eval_callfrom(parsed_line)
                 module, end = callfrom[0], callfrom[1:]
@@ -122,15 +129,22 @@ def evaluate(parsed_line, env):
                     args = [evaluate([a] if not isinstance(a, list) else a, env) for a in args]
                 m = consume_modules(module, end)
                 return m(*args) if isfunc(m) else m
+            if parsed_line[1].typ == 'ASSIGN_ONLY':
+                if env.find(parsed_line[0].value) is None:
+                    env[parsed_line[0].value] = evaluate(parsed_line[2:], env)
+                    return True
+                return False
             if parsed_line[1].typ == 'ASSIGN':
                 env[parsed_line[0].value] = evaluate(parsed_line[2:], env)
-                return None
+                return env[parsed_line[0].value]
             if parsed_line[1].typ == 'POSTFIX_OP':
                 if parsed_line[1].value in postfix_int:
+                    old = evaluate([parsed_line[0]], env)
+                    old = old if old is not None else 0
                     value = +1
                     if parsed_line[1].value == '--':
                         value = -1
-                    env[parsed_line[0].value] += value
+                    env[parsed_line[0].value] = old + value
                     return env[parsed_line[0].value]
                 elif parsed_line[1].value in postfix_others:
                     return env.find(parsed_line[1].value)(evaluate([parsed_line[0]], env))
@@ -149,7 +163,7 @@ def evaluate(parsed_line, env):
         if parsed_line[0].value == 'if':
             require(len(parsed_line) >= 3,
                 SyntaxError("Missing a part of the expression for 'if'. Line: %i" % parsed_line[0].line))
-            cond = evaluate([parsed_line[1]] if not isinstance(parsed_line[1], list) else parsed_line[1], env)
+            cond = bool(evaluate([parsed_line[1]] if not isinstance(parsed_line[1], list) else parsed_line[1], env))
             ret, c = None, 0
             blocs = parsed_line[2:]
             for i, b in enumerate(blocs):
@@ -167,7 +181,8 @@ def evaluate(parsed_line, env):
         if parsed_line[0].value == 'while':
             require(len(parsed_line) >= 3,
                 SyntaxError("Missing a part of the expression for 'while'. Line: %i" % parsed_line[0].line))
-            while evaluate([parsed_line[1]] if not isinstance(parsed_line[1], list) else parsed_line[1], env):
+            cond = lambda: bool(evaluate([parsed_line[1]] if not isinstance(parsed_line[1], list) else parsed_line[1], env))
+            while cond():
                 for expr in parsed_line[2:]:
                     evaluate([expr] if not isinstance(expr, list) else expr, env)
             return None
