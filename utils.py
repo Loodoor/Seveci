@@ -88,7 +88,6 @@ def standard_env():
 
         # listes
         '@': op.getitem, '@=': lambda lst, v: op.setitem(lst, v[0], v[1]), '@~': op.delitem, 'length': len,
-        'list': lambda *x: list(x), 'list?': lambda x: isinstance(x, list),
         '@@': lambda x: x[1:], 'count': lambda x, y: x.count(y),
         'cons': lambda x, y: [x] + y if not isinstance(x, list) and isinstance(y, list) else x + [y],
         'setitem': op.setitem,
@@ -103,18 +102,19 @@ def standard_env():
         'include': lambda x: _env.update({x: __import__(x)}),
 
         # fichiers
-        'open-input-file': open, 'open-output-file': lambda f: open(f, 'w'), 'close-file': lambda f: f.close(),
+        'open-input-file': lambda f: open(f, 'r'), 'open-output-file': lambda f: open(f, 'w'), 'close-file': lambda f: f.close(),
         'read-file': lambda f: f.read(), 'write-in-file': lambda f, s: f.write(s),
 
         # types
         'int': lambda x: int(x), 'float': lambda x: float(x), 'number?': lambda x: isinstance(x, (int, float)),
         'bool': lambda x: bool(x), 'bool?': lambda x: isinstance(x, bool),
         'str': lambda x: str(x), 'str?': lambda x: isinstance(x, str),
-        'list?': lambda x: isinstance(x, list),
+        'list': lambda *x: list(x), 'list?': lambda x: isinstance(x, list),
+        'dict': lambda k, v: dict(zip(k, v)), 'dict?': lambda x: isinstance(x, dict),
         'type': lambda x: type(x).__name__,
 
         # constantes
-        '$10': "\n", "$13": "\r", "$9": "\t",
+        '$10': '\n', '$13': '\r', '$9': '\t',
     })
     return _env
 
