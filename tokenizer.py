@@ -10,19 +10,20 @@ class TokenSpecification(Enum):
     CALL = r'<<'  # priorité la plus haute au tokenizing
     CALL_FROM = r'::'
 
-    POSTFIX_OP = r'(\+\+|--|@@)'
+    POSTFIX_OP = r'(\+\+|--|@@|:~)'
 
     NUMBER = r'-?\d+(\.\d*)?'
 
     DICT_ASSIGN = r'=>'
 
     OP = r'(\+|-|\*|/|%|\*\*|@=|@~|@)'
+    COND = r'(<|>|==|<=|>=|!=|&&)'
     BINARYOP = r'(\&|\^|\||rshift|lshift)'
-    COND = r'(<|>|==|<=|>=|!=)'
 
     STRING = r'"[^"]*?"'
     BOOL = r'(true|false)'
 
+    ASSIGN_ONLY = r':='
     ASSIGN = r'='
     BLOC_START, BLOC_END = r'\(', r'\)'
     ARRAY_START, ARRAY_END = r'\[', r'\]'
@@ -30,7 +31,7 @@ class TokenSpecification(Enum):
 
     COMMENT = r'#.*'
 
-    ID = r'[A-Za-z_$][A-Za-z0-9_\?-]*'
+    ID = r'[A-Za-z_$]([A-Za-z0-9_\?-]*[A-Za-z0-9]|[A-Za-z0-9]*)\??'
 
     END = r';'
     NEWLINE = r'(\n|\r|\r\n)'
@@ -50,7 +51,7 @@ def tokenize(code):
         value = mo.group(kind)
 
         if kind == 'MISMATCH':
-            raise RuntimeError('%r unexpected on line %i, %s' % (value, line_num + 1, code))
+            raise RuntimeError("{} unexpected on line {}, \"{}\"".format(value, line_num, code.split('\n')[line_num - 1].strip(' ')))
         elif kind == 'NEWLINE':
             line_num += 1
             line_start = mo.end()
