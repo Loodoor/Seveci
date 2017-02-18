@@ -48,7 +48,7 @@ class Env(dict):
         if not dispatch:
             self.update(zip(parms, args))
         else:
-            self.update({parms[0]: args})
+            self.update({parms[0]: list(args)})
         self.outer = outer
 
     def __xor__(self, other):
@@ -156,6 +156,20 @@ def get_first(ls):
     return first
 
 
+def check_dispatch(args):
+    d = False
+    i = None
+    if args and get_first(args).typ == 'DISPATCH':
+        require(len(args) == 2,
+            RuntimeError("Can not dispatch more than one argument"))
+        d = True
+        i = 0
+        require(args[1].typ in COLLECTIONS,
+            TypeError("Can not dispatch an argument of type {}".format(args[1].typ)))
+
+    return d, i
+
+
 def split_toks_kind(line, kind):
     w = []
 
@@ -230,7 +244,7 @@ def mtoa(*tokens):
         elif isinstance(tok, list):
             work += '(' + ' '.join(map(mtoa, tok)) + ')'
         elif isinstance(tok, complex):
-            work += tok.replace('j', 'i')
+            work += str(tok).replace('j', 'i')[1:-1]
         else:
             work += str(tok)
     return work

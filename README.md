@@ -164,11 +164,28 @@ retournera 4 quelque soit la valeur passée en argument
 
 *note 6*: une fonction en général doit toujours renvoyer une valeur. Si une fonction vide est dans le code (ce qui peut parfois se passer en phase de développement), elle doit quand même renvoyer quelque chose, par convention 0
 
+### Capturer un nombre infini d'argument
+
+*syntaxe*:
+```
+nom-de-fonction = function (!! liste-de-tous-les-arguments) (
+    print << (type << liste-de-tous-les-arguments)  # liste
+)
+```
+
+*note*: si une fonction utilise la notation avec le *dispatcher* devant un argument (`!!`), elle ne peut prendre en argument que celui-ci, et aucun autre
+
 ### Appel de fonctions
 
 *syntaxe*: `nom-de-fonction << argument1 argument2 argumentN`
 
 *note*: le nombre d'arguments doit être correct, auquel cas une erreur sera levée, pas de *partial evaluation* donc
+
+#### Envoyer des arguments contenus dans une liste
+
+*syntaxe*: `nom-de-fonction << !! liste`
+
+*note*: `fonction << !![]` est identique à `fonction <<` (pour une fonction ne prenant aucun argument)
 
 ## Boucle while
 

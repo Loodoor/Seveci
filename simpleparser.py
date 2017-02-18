@@ -125,14 +125,9 @@ def evaluate(parsed_line, env):
             require(env.find(parsed_line[0].value) or parsed_line[0].typ == 'PROC',
                 RuntimeError("'%s' does not exist, line: %i" % (parsed_line[0].value, parsed_line[0].line)))
             val = env.find(parsed_line[0].value) if parsed_line[0].typ == 'ID' else parsed_line[0].value
-            dispatch = False
-            if len(parsed_line[2:]) and get_first(parsed_line[2:]).typ == 'DISPATCH':
-                require(len(parsed_line[2:]) == 2,
-                    RuntimeError("Can not dispatch more than one argument"))
-                dispatch = True
-                parsed_line.pop(2)
-                require(parsed_line[2].typ in COLLECTIONS,
-                    TypeError("Can not dispatch an argument of type {}".format(parsed_line[2].typ)))
+            dispatch, i = check_dispatch(parsed_line[2:])
+            if i is not None:
+                parsed_line.pop(2 + i)
             args = [evaluate([bloc] if not isinstance(bloc, list) else bloc, env) for bloc in parsed_line[2:]]
             return val(*args) if not dispatch else val(*args[0])
     if parsed_line[0].typ in ('ID', 'PROC'):
@@ -140,16 +135,10 @@ def evaluate(parsed_line, env):
             if parsed_line[1].typ == 'CALL_FROM':
                 callfrom, args = eval_callfrom(parsed_line)
                 module, end = callfrom[0], callfrom[1:]
-                dispatch = False
-                if args:
-                    if get_first(args).typ == 'DISPATCH':
-                        require(len(args) == 2,
-                            RuntimeError("Can not dispatch more than one argument"))
-                        dispatch = True
-                        args.pop(0)
-                        require(args[0].typ in COLLECTIONS,
-                            TypeError("Can not dispatch an argument of type {}".format(args[0].typ)))
-                    args = [evaluate([a] if not isinstance(a, list) else a, env) for a in args]
+                dispatch, i = check_dispatch(args)
+                if i is not None:
+                    args.pop(i)
+                args = [evaluate([a] if not isinstance(a, list) else a, env) for a in args]
                 m = consume_modules(module, end)
                 return m(*args) if isfunc(m) and not dispatch else m(*args[0]) if dispatch else m
             if parsed_line[1].typ == 'ASSIGN_ONLY':
