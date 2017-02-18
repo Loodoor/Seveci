@@ -33,7 +33,7 @@ class TokenSpecification(Enum):
 
     COMMENT = r'#.*'
 
-    ID = r'[A-Za-z_$]([A-Za-z0-9_\?-]*[A-Za-z0-9]|[A-Za-z0-9]*)\??'
+    ID = r'[A-Za-z_$]([A-Za-z0-9_\?-]*[A-Za-z0-9_]|[A-Za-z0-9_]*)\??'
 
     END = r';'
     NEWLINE = r'(\n|\r|\r\n)'

@@ -88,7 +88,7 @@ def main(path="", lex=False, ast=False, exe=False, repl=False, debug=False):
         for line in parsed:
             val = simpleparser.evaluate(line, env)
             if val and debug:
-                print(mtoa(val))
+                print("[!]", mtoa(val))
         if debug:
             print("\n***")
 

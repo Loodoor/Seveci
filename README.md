@@ -33,7 +33,7 @@ b = "hello";
 *note*: la règle définissant le nommage des variables et la même que celle appliquée au nommage des fonctions, et est la suivante :
 
 ```python
-r'[A-Za-z_$]([A-Za-z0-9_\?-]*[A-Za-z0-9]|[A-Za-z0-9]*\??)'
+r'[A-Za-z_$]([A-Za-z0-9_\?-]*[A-Za-z0-9_]|[A-Za-z0-9_]*\??)'
 ```
 
 *note 2*: une valeur peut être de n'importe quel type (voir section `Types`), voir même une expression algébrique (chaque opérande doit néanmoins être entourée de parenthèses)
