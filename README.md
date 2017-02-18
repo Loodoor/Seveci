@@ -267,6 +267,8 @@ Qui au passage est strictement équivalent à :
 
 *note*: un tableau peut contenir n'importe quel type de valeur et même d'autres tableaux
 
+*note 2*: les éléments contenus dans un tableau ne sont pas interprétés
+
 ### Dictionnaire
 
 *syntaxe*: `{key => value key2 => value2 keyN => valueN}`
