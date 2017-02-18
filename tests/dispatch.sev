@@ -1,0 +1,13 @@
+a = function (b c) (
+    print << b " " c
+)
+# a << !![0 1]
+
+include << "os"
+
+os::getcwd << !![]
+
+b = function (!!d) (
+    print << "type : " (type << d) ", value : " d
+    )
+b << 1 2 "3" 4+5i

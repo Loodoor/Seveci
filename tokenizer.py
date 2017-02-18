@@ -10,9 +10,11 @@ class TokenSpecification(Enum):
     CALL = r'<<'  # priorité la plus haute au tokenizing
     CALL_FROM = r'::'
 
+    DISPATCH = r'!!'
+
     POSTFIX_OP = r'(\+\+|--|@@|:~)'
 
-    NUMBER = r'-?\d+(\.\d*)?'
+    NUMBER = r'-?\d+(\.\d*)?([\-\+]\d+(\.\d*)?i)?'
 
     DICT_ASSIGN = r'=>'
 

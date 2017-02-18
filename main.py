@@ -26,10 +26,15 @@ arg_parser.add_argument('-d', '--debug', dest='debug', action='store_true',
 
 
 def main(path="", lex=False, ast=False, exe=False, repl=False, debug=False):
+    if debug:
+        print("Debug mode on")
+
     if path:
         path = os.path.abspath(path)
+        print("Opening {}".format(path))
         with open(path, "r", encoding="utf-8") as file:
             content = file.read()
+        print(" " * 7, "{} lines, {} characters".format(len(content.split('\n')), len(content)))
 
     if ast:
         lex = True
@@ -41,11 +46,21 @@ def main(path="", lex=False, ast=False, exe=False, repl=False, debug=False):
     parsed = None
 
     if lex:
+        if debug:
+            print("[i] Creating tokens list,", end=" ")
         tokens = [tok for tok in tokenizer.tokenize(content) if is_ok(tok)]
-        if not ast: print_r(tokens)
+        if debug:
+            print(count_all_toks_in_list(tokens), "tokens")
+        if not ast:
+            print_r(tokens)
     if ast:
+        if debug:
+            print("[i] Creating abstract syntax tree,", end=" ")
         parsed = [p for p in [simpleparser.parse(content, toks) for toks in tokens] if is_ok(p)]
-        if not exe: print_r(parsed)
+        if debug:
+            print(len(parsed), "blocs")
+        if not exe:
+            print_r(parsed)
     if repl:
         print("Starting a REPL instance. Type !go to execute your code")
         env = standard_env()
@@ -67,11 +82,15 @@ def main(path="", lex=False, ast=False, exe=False, repl=False, debug=False):
                         print(exc)
                 code = []
     if exe:
+        if debug:
+            print("[i] Executing\n\nOut:\n***\n")
         env = standard_env()
         for line in parsed:
             val = simpleparser.evaluate(line, env)
             if val and debug:
                 print(mtoa(val))
+        if debug:
+            print("\n***")
 
 
 if __name__ == '__main__':

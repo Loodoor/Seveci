@@ -13,6 +13,7 @@ postfix_int = ('++', '--')
 postfix_others = ('@@', ':~')
 POSTFIX = postfix_int + postfix_others
 ASSIGNERS = ('=', ':=')
+COLLECTIONS = ('ARRAY',)
 
 
 class T:
@@ -33,14 +34,21 @@ class TokenizingError(Exception):
     pass
 
 
+class DispatchError(Exception):
+    pass
+
+
 class StructConstructionError(Exception):
     pass
 
 
 class Env(dict):
-    def __init__(self, parms=(), args=(), outer=None):
+    def __init__(self, parms=(), args=(), outer=None, dispatch=False):
         super().__init__(self)
-        self.update(zip(parms, args))
+        if not dispatch:
+            self.update(zip(parms, args))
+        else:
+            self.update({parms[0]: args})
         self.outer = outer
 
     def __xor__(self, other):
@@ -122,11 +130,30 @@ def standard_env():
     return _env
 
 
+def count_all_toks_in_list(ls):
+    w = 0
+    for t in ls:
+        if isinstance(t, list):
+            w += count_all_toks_in_list(t)
+        else:
+            w += 1
+    return w
+
+
 def reduce_parsed(parsed):
     if parsed:
         while isinstance(parsed[0], list) and len(parsed) == 1:
             parsed = parsed[0]
     return parsed
+
+
+def get_first(ls):
+    first = ls[0:1]
+    while not isinstance(first, Token):
+        first = first[0:1]
+        if isinstance(first, list):
+            first = first[0]
+    return first
 
 
 def split_toks_kind(line, kind):
@@ -182,12 +209,12 @@ def atom(tok):
     if tok.typ == 'NUMBER':
         try:
             value = int(tok.value)
-        except ValueError:
+        except (TypeError, ValueError):
             try:
                 value = float(tok.value)
-            except ValueError:
+            except (TypeError, ValueError):
                 try:
-                    value = complex(tok.value.replace('i', 'j', 1))
+                    value = complex(str(tok.value).replace('i', 'j', 1))
                 except ValueError:
                     pass
     return Token(tok.typ, value, tok.line, tok.column)

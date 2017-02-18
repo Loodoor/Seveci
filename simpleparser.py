@@ -3,12 +3,12 @@ from utils import *
 
 
 class Procedure(object):
-    def __init__(self, params, body, envi):
-        self.params, self.body, self.env = params, body, envi
+    def __init__(self, params, body, envi, dispatch=False):
+        self.params, self.body, self.env, self.dispatch = params, body, envi, dispatch
         self.params = [p.value for p in self.params]
 
     def __call__(self, *args):
-        env = Env(self.params, args, outer=self.env)
+        env = Env(self.params, args, outer=self.env, dispatch=self.dispatch)
         if self.body[:-1]:
             for line in self.body[:-1]:
                 evaluate([line] if not isinstance(line, list) else line, env)
@@ -125,16 +125,33 @@ def evaluate(parsed_line, env):
             require(env.find(parsed_line[0].value) or parsed_line[0].typ == 'PROC',
                 RuntimeError("'%s' does not exist, line: %i" % (parsed_line[0].value, parsed_line[0].line)))
             val = env.find(parsed_line[0].value) if parsed_line[0].typ == 'ID' else parsed_line[0].value
-            return val(*[evaluate([bloc] if not isinstance(bloc, list) else bloc, env) for bloc in parsed_line[2:]])
+            dispatch = False
+            if len(parsed_line[2:]) and get_first(parsed_line[2:]).typ == 'DISPATCH':
+                require(len(parsed_line[2:]) == 2,
+                    RuntimeError("Can not dispatch more than one argument"))
+                dispatch = True
+                parsed_line.pop(2)
+                require(parsed_line[2].typ in COLLECTIONS,
+                    TypeError("Can not dispatch an argument of type {}".format(parsed_line[2].typ)))
+            args = [evaluate([bloc] if not isinstance(bloc, list) else bloc, env) for bloc in parsed_line[2:]]
+            return val(*args) if not dispatch else val(*args[0])
     if parsed_line[0].typ in ('ID', 'PROC'):
         if len(parsed_line) > 1:
             if parsed_line[1].typ == 'CALL_FROM':
                 callfrom, args = eval_callfrom(parsed_line)
                 module, end = callfrom[0], callfrom[1:]
+                dispatch = False
                 if args:
+                    if get_first(args).typ == 'DISPATCH':
+                        require(len(args) == 2,
+                            RuntimeError("Can not dispatch more than one argument"))
+                        dispatch = True
+                        args.pop(0)
+                        require(args[0].typ in COLLECTIONS,
+                            TypeError("Can not dispatch an argument of type {}".format(args[0].typ)))
                     args = [evaluate([a] if not isinstance(a, list) else a, env) for a in args]
                 m = consume_modules(module, end)
-                return m(*args) if isfunc(m) else m
+                return m(*args) if isfunc(m) and not dispatch else m(*args[0]) if dispatch else m
             if parsed_line[1].typ == 'ASSIGN_ONLY':
                 if env.find(parsed_line[0].value) is None:
                     env[parsed_line[0].value] = evaluate(parsed_line[2:], env)
@@ -157,10 +174,16 @@ def evaluate(parsed_line, env):
         return env.find(parsed_line[0].value)
     if parsed_line[0].typ == 'kwtype':
         if parsed_line[0].value == 'function':
+            dispatch = get_first(parsed_line[1])
+            dispatch = dispatch and dispatch.typ == 'DISPATCH'
+            if dispatch:
+                parsed_line[1].pop(0)
+                require(len(parsed_line[1]) == 1,
+                    DispatchError("Can not dispatch multiple variables on more than one argument"))
             for supposed_arg in parsed_line[1]:
                 require(supposed_arg.typ == 'ID',
                     SyntaxError("'%s' should be an ID, not '%s'. Line: %i" % (supposed_arg.value, supposed_arg.typ, supposed_arg.line)))
-            return Procedure(parsed_line[1], parsed_line[2:], env)
+            return Procedure(parsed_line[1], parsed_line[2:], env, dispatch=dispatch)
         if parsed_line[0].value == 'struct':
             obj = Struct(env)
             for bloc in parsed_line[1:]:
@@ -225,11 +248,7 @@ def check_parsing(required_tok_type, repr_of_type):
 @check_parsing('DICT_END', '}')
 def parse_dict(context, tokens):
     hashmap = {}
-    first = tokens[0:1]
-    while not isinstance(first, Token):
-        first = first[0:1]
-        if isinstance(first, list):
-            first = first[0]
+    first = get_first(tokens)
 
     key = True
     t_key = ""
@@ -253,12 +272,13 @@ def parse_dict(context, tokens):
 @check_parsing('ARRAY_END', ']')
 def parse_array(context, tokens):
     array = []
+    first = get_first(tokens)
 
     while tokens[0].typ != 'ARRAY_END':
         val = parse(context, tokens)
         if val is not None:
             array.append(val)
-    tok_array = Token('ARRAY', [t.value for t in array], array[0].line, array[0].column)
+    tok_array = Token('ARRAY', [t.value for t in array], first.line, first.column)
 
     return tok_array
 
@@ -276,9 +296,9 @@ def parse_bloc(context, tokens):
 
 
 def parse(context, tokens):
-    token = tokens.pop(0)  # on enlève le premier token qui doit etre un '('
-    # require(token.typ != 'BLOC_END',
-        # SyntaxError("Unexpected '%s', line: %i, column: %i (instead of '(')\n%s" % (token.value, token.line, token.column, context[token.line - 1])))
+    token = tokens.pop(0)
+    require(token.typ != 'BLOC_END',
+        SyntaxError("Unexpected '%s', line: %i, column: %i (instead of '(')\n%s" % (token.value, token.line, token.column, context[token.line - 1])))
 
     if token.typ == 'DICT_START':
         return parse_dict(context, tokens)
