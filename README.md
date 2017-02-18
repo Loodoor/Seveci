@@ -1,8 +1,9 @@
-# Seveci
+Seveci
+======
 
 *Un langage de programmation interprété en Python.*
 
-## Utilisation de l'interpréteur
+# Utilisation de l'interpréteur
 
 Pour obtenir une liste des fonctionnalités proposées, tapez : `py -3.4 main.py -h`
 
@@ -28,7 +29,7 @@ Il est possible de cumuler les options, par exemple : `py -3.4 main.py -dep test
 
 A noter que cumuler les options `-l`, `-a`, et `-e` ne sert à rien car `-e` implique automatique `-la`, et `-a` implique automatiquement `-l`.
 
-## Description du langage
+# Description du langage
 
 ## Blocs
 
