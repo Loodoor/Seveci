@@ -2,6 +2,34 @@
 
 *Un langage de programmation interprété en Python.*
 
+## Utilisation de l'interpréteur
+
+Pour obtenir une liste des fonctionnalités proposées, tapez : `py -3.4 main.py -h`
+
+Ce qui vous donnera ceci :
+
+```
+usage: seveci [-h] [--version] [-p PATH] [-l] [-a] [-e] [-i] [-d]
+
+Tokenize, parse, and execute the given input file
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --version             show program's version number and exit
+  -p PATH, --path PATH  the input file
+  -l, --lex             tokenize the given input file
+  -a, --ast             parse the given input file
+  -e, --execute         execute the given input file
+  -i, --interpreter     start an interpreter
+  -d, --debug           turn on debug mode
+```
+
+Il est possible de cumuler les options, par exemple : `py -3.4 main.py -dep tests/99bottles.sev`.
+
+A noter que cumuler les options `-l`, `-a`, et `-e` ne sert à rien car `-e` implique automatique `-la`, et `-a` implique automatiquement `-l`.
+
+## Description du langage
+
 ## Blocs
 
 *syntaxe*: `(code)` ou `(code; code2; codeN)`
@@ -278,7 +306,7 @@ objet = struct (
 
 *note 4*: par convention, on laisse une ligne entre chaque déclaration de fonction. Les déclarations de variables doivent se faire au tout début de la `struct` pour éviter des erreurs. Les variables de `struct` sont préfixées de `_` par convention, et les variables de fonction de `struct` par `__` pour bien les différencier des variables de `struct`. Les noms de fonction de `struct` commencent par `$` par convention, pour les différencier des fonctions du scope supérieur.
 
-*note 5*: toutes les variables déclarées dans une `struct` sont **et** resteront toujours privées, sans possibilité de changer ce comportement
+*note 5*: toutes les variables déclarées dans une `struct` sont publiques
 
 #### Instancier une struct
 

@@ -6,11 +6,11 @@ from utils import *
 
 
 arg_parser = argparse.ArgumentParser(
-    prog='seveci',
+    prog='Seveci interpreter',
     description="Tokenize, parse, and execute the given input file"
 )
 arg_parser.add_argument('--version', action='version',
-                        version='%(prog)s 2.0')
+                        version='%(prog)s 2.1')
 arg_parser.add_argument('-p', '--path', dest='path', action='store',
                         help='the input file')
 arg_parser.add_argument('-l', '--lex', dest='lex', action='store_true',
