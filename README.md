@@ -217,7 +217,7 @@ while ( (a = (a ++)) < 10 ) (
 )
 ```
 
-*note*: ici encore l'intervalle de `a` sera `]0, 10[`, à cause du fonctionnement de l'assignement aveugle
+*note*: ici encore l'intervalle de `a` sera `[0, 10[`, car l'assignement aveugle met une variable à 0
 
 ## Condition
 

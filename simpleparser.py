@@ -163,11 +163,10 @@ def evaluate(parsed_line, env):
             if parsed_line[1].typ == 'POSTFIX_OP':
                 if parsed_line[1].value in postfix_int:
                     old = evaluate([parsed_line[0]], env)
-                    old = old if old is not None else 0
                     value = +1
                     if parsed_line[1].value == '--':
                         value = -1
-                    env[parsed_line[0].value] = old + value
+                    env[parsed_line[0].value] = old + value if old is not None else 0
                     return env[parsed_line[0].value]
                 elif parsed_line[1].value in postfix_others:
                     return env.find(parsed_line[1].value)(evaluate([parsed_line[0]], env))
